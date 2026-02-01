@@ -54,7 +54,10 @@ body{
   background:
     radial-gradient(1100px 600px at 70% 15%, rgba(229,9,20,.20), transparent 60%),
     linear-gradient(to top, rgba(0,0,0,.95), rgba(0,0,0,.55)),
+    url("./login-bg.jpg") center / cover no-repeat,
     var(--bg);
+}
+
 }
 .login-card{
   width:min(460px, 100%);
@@ -329,3 +332,4 @@ input:focus, select:focus, textarea:focus{border-color: rgba(229,9,20,.55)}
 .admin-item .meta{color:var(--muted);font-size:12px;margin-top:4px}
 .admin-actions{display:flex;gap:8px;flex-wrap:wrap}
 .textarea{min-height:120px;resize:vertical}
+
