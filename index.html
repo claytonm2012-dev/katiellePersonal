@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Consultoria dos Sonhos</title>
   <link rel="stylesheet" href="./style.css">
 </head>
@@ -20,14 +21,13 @@
           </div>
         </div>
 
-        <!-- ABAS -->
         <div class="tabs">
           <button class="tab active" id="tabLogin" type="button">Entrar</button>
           <button class="tab" id="tabRegister" type="button">Cadastrar (Admin)</button>
           <button class="tab" id="tabAdmin" type="button">Painel ADM</button>
         </div>
 
-        <!-- FORM LOGIN -->
+        <!-- LOGIN -->
         <form id="loginForm" class="form">
           <h2>Entrar</h2>
           <p class="muted">Acesse sua plataforma de aulas.</p>
@@ -44,7 +44,7 @@
           <p class="small muted" id="loginMsg"></p>
         </form>
 
-        <!-- FORM CADASTRO ALUNO (ADMIN) -->
+        <!-- CADASTRO ALUNO (ADMIN) -->
         <form id="registerForm" class="form hidden">
           <h2>Cadastro de aluno (Admin)</h2>
           <p class="muted">Cadastre alunos e defina o tempo de acesso.</p>
@@ -73,13 +73,13 @@
 
           <div class="row">
             <button class="btn" type="button" id="listUsersBtn">Ver cadastrados</button>
-            <button class="btn" type="button" id="wipeUsersBtn">Apagar todos</button>
+            <button class="btn danger" type="button" id="wipeUsersBtn">Apagar todos</button>
           </div>
 
           <p class="small muted" id="regMsg"></p>
         </form>
 
-        <!-- FORM ADMIN -->
+        <!-- PAINEL ADM (VIDEOS) -->
         <form id="adminForm" class="form hidden">
           <h2>Painel ADM — Vídeos</h2>
           <p class="muted">Adicionar / Editar / Apagar vídeos sem mexer no código.</p>
@@ -95,10 +95,9 @@
 
           <p class="small muted" id="adminMsg"></p>
 
-          <!-- ✅ PAINEL QUE APARECE DEPOIS DA SENHA -->
+          <!-- ✅ PAINEL COMPLETO (aparece após senha correta) -->
           <div class="admin-panel hidden" id="adminPanel">
             <div class="admin-grid">
-
               <div class="admin-card">
                 <h3>Adicionar / Editar vídeo</h3>
 
@@ -118,7 +117,7 @@
                   <input id="videoLabel" type="text" placeholder="Ex: Glúteos / Core / Mobilidade" />
                 </label>
 
-                <label>Título
+                <label>Título (nome do exercício)
                   <input id="videoTitle" type="text" placeholder="Nome da aula" required />
                 </label>
 
@@ -149,10 +148,10 @@
 
                 <textarea id="videosJson" class="textarea" placeholder="Cole aqui o JSON para importar/exportar..."></textarea>
               </div>
-
             </div>
           </div>
         </form>
+
       </div>
     </section>
 
@@ -173,8 +172,7 @@
               <span class="icon">🔎</span>
               <input id="searchInput" placeholder="Buscar aulas, tópicos..." />
             </div>
-
-            <button class="btn" id="logoutBtn">Sair</button>
+            <button class="btn" id="logoutBtn" type="button">Sair</button>
           </div>
         </div>
       </header>
@@ -186,8 +184,8 @@
               <h2>Treine com método. Evolua com consistência.</h2>
               <p class="muted">Use a busca ou o rodapé para navegar pelos tópicos.</p>
               <div class="hero-actions">
-                <button class="btn primary" id="playFeatured">▶ Assistir aula em destaque</button>
-                <button class="btn" id="scrollTopics">Ver tópicos</button>
+                <button class="btn primary" id="playFeatured" type="button">▶ Assistir aula em destaque</button>
+                <button class="btn" id="scrollTopics" type="button">Ver tópicos</button>
               </div>
             </div>
 
@@ -215,7 +213,7 @@
       </main>
     </section>
 
-    <!-- MODAL VÍDEO -->
+    <!-- MODAL VIDEO -->
     <div class="modal" id="modal">
       <div class="modal-box">
         <div class="modal-top">
@@ -234,6 +232,5 @@
   <script src="./script.js"></script>
 </body>
 </html>
-
 
 
