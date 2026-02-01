@@ -456,4 +456,124 @@ body{
   height:100%;
   border:0;
 }
+/* ==========================
+   PATCH PRO (SEM REMOVER NADA)
+   - ADM mais profissional
+   - Rodapé fixo estilo Netflix
+   - Foto menor (como versão passada)
+========================== */
+
+/* 1) FOTO DO FUNDO: um pouco menos zoom (versão passada) */
+.login{
+  /* ajusta tamanho e posição da imagem, mantendo seu degradê atual */
+  background:
+    radial-gradient(1200px 650px at 70% 12%, rgba(229,9,20,.18), transparent 60%),
+    linear-gradient(to top, rgba(0,0,0,.75), rgba(0,0,0,.35)),
+    url("./login-bg.jpg") left 14% top 18% / 102% auto no-repeat;
+}
+
+/* 2) PAINEL ADM MAIS PROFISSIONAL */
+.admin-panel{
+  border-top: 1px solid rgba(255,255,255,.10);
+  background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(0,0,0,.06));
+  border-radius: 16px;
+  padding: 14px;
+}
+
+.admin-card{
+  background: rgba(18,18,22,.62);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 16px;
+  box-shadow: 0 12px 40px rgba(0,0,0,.35);
+}
+
+.admin-card h3{
+  font-size: 18px;
+  letter-spacing: .2px;
+}
+
+.admin-list{
+  max-height: 360px;      /* fica organizado */
+  overflow: auto;
+  padding-right: 6px;
+}
+
+.admin-list::-webkit-scrollbar{ width: 10px; }
+.admin-list::-webkit-scrollbar-thumb{
+  background: rgba(255,255,255,.14);
+  border-radius: 999px;
+}
+
+.admin-item{
+  transition: transform .12s ease, border-color .18s ease, background .18s ease;
+}
+.admin-item:hover{
+  transform: translateY(-1px);
+  border-color: rgba(229,9,20,.22);
+  background: rgba(229,9,20,.05);
+}
+
+/* botões do painel ADM mais “premium” */
+.admin-actions .btn{
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.06);
+}
+.admin-actions .btn:hover{
+  filter: brightness(1.08);
+}
+.admin-actions .btn.danger,
+.btn.danger{
+  border-color: rgba(229,9,20,.35);
+}
+
+/* textarea do JSON mais bonito */
+.textarea{
+  background: rgba(0,0,0,.28);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 14px;
+}
+
+/* 3) RODAPÉ DE TÓPICOS: FIXO NA TELA (Netflix-like)
+   (isso resolve “faltando rodapé” em algumas telas) */
+.footer-nav{
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 14px;
+
+  width: min(1200px, calc(100% - 24px));
+  margin: 0;
+
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.75);
+  backdrop-filter: blur(14px);
+
+  padding: 10px 10px;
+  box-shadow: 0 18px 50px rgba(0,0,0,.45);
+}
+
+/* garante espaço para o rodapé fixo não cobrir os cards */
+.wrap{
+  padding-bottom: 120px;
+}
+
+/* deixa os botões do rodapé mais “clicáveis” */
+.fbtn{
+  padding: 10px 14px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.06);
+}
+.fbtn:hover{
+  border-color: rgba(229,9,20,.35);
+}
+
+/* no mobile: rodapé ocupa mais largura e sobe menos */
+@media (max-width: 860px){
+  .footer-nav{
+    bottom: 10px;
+    width: calc(100% - 20px);
+  }
+}
+
 
