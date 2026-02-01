@@ -1,244 +1,161 @@
-:root{
-  --bg:#000;
-  --panel:#141414;
-  --card:#1f1f1f;
-  --text:#fff;
-  --muted:#b3b3b3;
-  --brand:#e50914;
-  --brand2:#b20710;
-  --border:rgba(255,255,255,.12);
-  --radius:16px;
-  --shadow:0 18px 50px rgba(0,0,0,.75);
+/* RESET */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
-*{box-sizing:border-box}
-
-body{
-  margin:0;
-  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
-  background:var(--bg);
-  color:var(--text);
+html, body {
+  width: 100%;
+  height: 100%;
+  background: #000;
+  color: #fff;
 }
 
-.hidden{display:none!important}
-.muted{color:var(--muted)}
-.small{font-size:12px}
+/* VARIÁVEIS */
+:root {
+  --brand: #e50914;
+  --bg: #000;
+  --card-bg: rgba(20, 20, 20, 0.75);
+  --radius: 14px;
+  --shadow: 0 20px 60px rgba(0,0,0,.7);
+}
 
-/* ================= LOGIN ================= */
-
-.login{
-  min-height:100vh;
-  display:grid;
-  place-items:center;
-  padding:20px;
-
-  /* FUNDO COM FOTO + DEGRADÊ */
+/* LOGIN */
+.login {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
   background:
-    linear-gradient(to right, rgba(0,0,0,.95), rgba(0,0,0,.55)),
-    url("https://claytonm2012-dev.github.io/katiellPersonal/login-bg.jpg")
-      center center / cover no-repeat,
-    #000;
+    radial-gradient(1100px 600px at 70% 15%, rgba(229,9,20,.25), transparent 60%),
+    linear-gradient(to top, rgba(0,0,0,.95), rgba(0,0,0,.55)),
+    url("login-bg.jpg") center / cover no-repeat;
 }
 
-.login-card{
-  width:min(460px, 100%);
-  background:rgba(20,20,20,.72);
-  border:1px solid var(--border);
-  border-radius:var(--radius);
-  padding:20px;
-  box-shadow:var(--shadow);
-  backdrop-filter:blur(6px);
+/* CARD */
+.login-card {
+  width: min(420px, 100%);
+  background: var(--card-bg);
+  backdrop-filter: blur(10px);
+  border-radius: var(--radius);
+  padding: 26px;
+  box-shadow: var(--shadow);
+  animation: fadeUp .6s ease;
 }
 
-/* Brand */
-.brandline{
-  display:flex;
-  gap:10px;
-  align-items:center;
-  margin-bottom:12px;
+/* ANIMAÇÃO */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.brand-dot{
-  width:12px;
-  height:12px;
-  border-radius:50%;
-  background:var(--brand);
-  box-shadow:0 0 0 6px rgba(229,9,20,.18);
+/* TOPO */
+.brandline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
 }
 
-.brand-title{
-  margin:0;
-  font-size:16px;
-  font-weight:900;
+.brand-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--brand);
+  box-shadow: 0 0 12px rgba(229,9,20,.9);
 }
 
-.brand-sub{
-  margin:0;
-  font-size:12px;
-  color:var(--muted);
+.brand-title {
+  font-size: 18px;
+  font-weight: bold;
 }
 
-/* Tabs */
-.tabs{
-  display:flex;
-  gap:10px;
-  margin-bottom:12px;
+/* TABS */
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
 }
 
-.tab{
-  flex:1;
-  padding:10px;
-  border-radius:999px;
-  background:#111;
-  border:1px solid var(--border);
-  color:#fff;
-  cursor:pointer;
+.tab {
+  flex: 1;
+  padding: 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.2);
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  font-size: 13px;
 }
 
-.tab.active{
-  background:rgba(229,9,20,.2);
-  border-color:var(--brand);
-  font-weight:700;
+.tab.active {
+  background: var(--brand);
+  border-color: var(--brand);
 }
 
-/* Forms */
-.form{
-  display:flex;
-  flex-direction:column;
-  gap:10px;
+/* FORM */
+form h2 {
+  font-size: 20px;
+  margin-bottom: 6px;
 }
 
-.form h2{
-  margin:6px 0;
+form p {
+  font-size: 13px;
+  opacity: .8;
+  margin-bottom: 14px;
 }
 
-label{
-  font-size:13px;
-  display:flex;
-  flex-direction:column;
-  gap:6px;
+label {
+  font-size: 12px;
+  margin-top: 10px;
+  display: block;
 }
 
-input,select{
-  padding:12px;
-  border-radius:12px;
-  border:1px solid var(--border);
-  background:#111;
-  color:#fff;
+input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  outline: none;
+  margin-top: 4px;
+  background: #111;
+  color: #fff;
 }
 
-input:focus,select:focus{
-  outline:none;
-  border-color:var(--brand);
+input::placeholder {
+  color: #aaa;
 }
 
-/* Buttons */
-.btn{
-  padding:12px;
-  border-radius:999px;
-  border:1px solid var(--border);
-  background:#111;
-  color:#fff;
-  cursor:pointer;
+/* BOTÃO */
+button {
+  width: 100%;
+  padding: 12px;
+  border-radius: 999px;
+  border: none;
+  background: var(--brand);
+  color: #fff;
+  font-size: 15px;
+  font-weight: bold;
+  margin-top: 16px;
+  cursor: pointer;
+  transition: .2s;
 }
 
-.btn.primary{
-  background:var(--brand);
-  border:none;
-  font-weight:800;
+button:hover {
+  background: #f6121d;
 }
 
-.btn.primary:hover{
-  background:var(--brand2);
-}
-
-.link{
-  background:none;
-  border:none;
-  color:#fff;
-  text-decoration:underline;
-  cursor:pointer;
-  font-size:12px;
-}
-
-.row{
-  display:flex;
-  justify-content:space-between;
-  gap:10px;
-  flex-wrap:wrap;
-}
-
-/* ================= PLATAFORMA ================= */
-
-.topbar{
-  position:sticky;
-  top:0;
-  z-index:10;
-  background:rgba(0,0,0,.9);
-  border-bottom:1px solid var(--border);
-}
-
-.topbar-inner{
-  max-width:1200px;
-  margin:auto;
-  padding:12px 16px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-
-.logo{
-  display:flex;
-  gap:10px;
-  align-items:center;
-}
-
-.logo-mark{
-  width:36px;
-  height:36px;
-  border-radius:12px;
-  background:var(--brand);
-  display:grid;
-  place-items:center;
-  font-weight:900;
-}
-
-.logo-text span{
-  font-size:12px;
-  color:var(--muted);
-}
-
-/* Hero */
-.wrap{
-  max-width:1200px;
-  margin:auto;
-  padding:16px;
-}
-
-.hero{
-  margin-top:16px;
-  background:
-    linear-gradient(to right, rgba(0,0,0,.9), rgba(0,0,0,.5)),
-    url("https://claytonm2012-dev.github.io/katiellPersonal/login-bg.jpg")
-      center / cover no-repeat;
-  border-radius:var(--radius);
-  padding:20px;
-  box-shadow:var(--shadow);
-}
-
-.hero-inner{
-  display:grid;
-  grid-template-columns:1.2fr .8fr;
-  gap:16px;
-}
-
-@media(max-width:900px){
-  .hero-inner{grid-template-columns:1fr}
-}
-
-/* Footer */
-.footer{
-  text-align:center;
-  padding:16px;
-  color:var(--muted);
+/* MOBILE */
+@media (max-width: 600px) {
+  .login {
+    padding: 16px;
+  }
 }
