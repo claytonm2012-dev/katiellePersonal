@@ -1,161 +1,218 @@
-/* RESET */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: Arial, Helvetica, sans-serif;
+:root{
+  --bg:#000;
+  --panel:#141414;
+  --card:#1f1f1f;
+  --text:#fff;
+  --muted:#b3b3b3;
+  --brand:#e50914;
+  --brand2:#b20710;
+  --border:rgba(255,255,255,.12);
+  --radius:16px;
+  --shadow:0 18px 50px rgba(0,0,0,.75);
 }
 
-html, body {
-  width: 100%;
-  height: 100%;
-  background: #000;
-  color: #fff;
+*{box-sizing:border-box}
+
+html,body{
+  height:100%;
 }
 
-/* VARIÁVEIS */
-:root {
-  --brand: #e50914;
-  --bg: #000;
-  --card-bg: rgba(20, 20, 20, 0.75);
-  --radius: 14px;
-  --shadow: 0 20px 60px rgba(0,0,0,.7);
+body{
+  margin:0;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+  background:var(--bg);
+  color:var(--text);
 }
 
-/* LOGIN */
-.login {
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: 24px;
+/* ✅ ESSENCIAL: esconder telas e formulários quando tiver class hidden */
+.hidden{display:none !important}
+
+.muted{color:var(--muted)}
+.small{font-size:12px}
+
+/* ================== BOTÕES ================== */
+.btn{
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(20,20,20,.75);
+  color:var(--text);
+  padding:10px 12px;
+  border-radius:999px;
+  cursor:pointer;
+  transition: transform .08s ease, border-color .2s ease, background .2s ease;
+  white-space:nowrap;
+}
+.btn:hover{ transform: translateY(-1px); border-color: rgba(255,255,255,.22); }
+.btn.primary{ background: var(--brand); border:none; font-weight:900; }
+.btn.primary:hover{ background: var(--brand2); }
+
+.link{
+  background:transparent; border:0; color:#fff;
+  cursor:pointer; text-decoration: underline; opacity:.9;
+}
+.link:hover{opacity:1}
+
+.row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap
+}
+
+/* ================== LOGIN (FUNDO COM FOTO) ================== */
+.login{
+  min-height:100vh;
+  display:grid;
+  place-items:center;
+  padding:18px;
+
+  /* ✅ imagem está na raiz do repo: login-bg.jpg */
   background:
-    radial-gradient(1100px 600px at 70% 15%, rgba(229,9,20,.25), transparent 60%),
+    radial-gradient(1100px 600px at 70% 15%, rgba(229,9,20,.20), transparent 60%),
     linear-gradient(to top, rgba(0,0,0,.95), rgba(0,0,0,.55)),
-    url("login-bg.jpg") center / cover no-repeat;
+    url("login-bg.jpg") 10% center / 85% no-repeat,
+    var(--bg);
 }
 
-/* CARD */
-.login-card {
-  width: min(420px, 100%);
-  background: var(--card-bg);
-  backdrop-filter: blur(10px);
+/* Mobile: melhor encaixe */
+@media (max-width: 900px){
+  .login{
+    background:
+      linear-gradient(to top, rgba(0,0,0,.95), rgba(0,0,0,.70)),
+      url("login-bg.jpg") center / cover no-repeat,
+      var(--bg);
+  }
+}
+
+/* ================== CARD LOGIN ================== */
+.login-card{
+  width:min(520px, 92vw);
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(20,20,20,.70);
   border-radius: var(--radius);
-  padding: 26px;
+  padding:18px;
   box-shadow: var(--shadow);
-  animation: fadeUp .6s ease;
+  backdrop-filter: blur(8px);
 }
 
-/* ANIMAÇÃO */
-@keyframes fadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* TOPO */
-.brandline {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 18px;
-}
-
-.brand-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 999px;
+.brandline{display:flex;gap:10px;align-items:center;margin-bottom:10px}
+.brand-dot{
+  width:12px;height:12px;border-radius:999px;
   background: var(--brand);
-  box-shadow: 0 0 12px rgba(229,9,20,.9);
+  box-shadow: 0 0 0 6px rgba(229,9,20,.18);
+}
+.brand-title{margin:0;font-size:16px;font-weight:950}
+.brand-sub{margin:0;color:var(--muted);font-size:12px}
+
+/* ================== TABS (abas) ================== */
+.tabs{
+  display:flex;
+  gap:10px;
+  margin:10px 0 6px;
 }
 
-.brand-title {
-  font-size: 18px;
-  font-weight: bold;
+.tab{
+  flex:1;
+  padding:10px 12px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(20,20,20,.55);
+  color:#fff;
+  cursor:pointer;
+  /* ✅ importante: tab NÃO fica width 100% global */
+  width:auto;
 }
 
-/* TABS */
-.tabs {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
+.tab.active{
+  border-color: rgba(229,9,20,.55);
+  background: rgba(229,9,20,.18);
+  font-weight:900;
 }
 
-.tab {
-  flex: 1;
-  padding: 8px;
-  border-radius: 999px;
-  border: 1px solid rgba(255,255,255,.2);
-  background: transparent;
-  color: #fff;
-  cursor: pointer;
-  font-size: 13px;
+/* ================== FORM ================== */
+.form{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin-top:10px
+}
+.form h2{margin:8px 0 0;font-size:22px}
+
+label{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  font-size:13px
 }
 
-.tab.active {
-  background: var(--brand);
-  border-color: var(--brand);
+input, select, textarea{
+  width:100%;
+  padding:12px 12px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.14);
+  background: rgba(0,0,0,.35);
+  color:var(--text);
+  outline:none;
+}
+input:focus, select:focus, textarea:focus{
+  border-color: rgba(229,9,20,.55)
 }
 
-/* FORM */
-form h2 {
-  font-size: 20px;
-  margin-bottom: 6px;
+/* ✅ botão “grande” só dentro do formulário */
+.form .btn{
+  width:100%;
+  justify-content:center;
 }
 
-form p {
-  font-size: 13px;
-  opacity: .8;
-  margin-bottom: 14px;
+/* ================== (Opcional) ADMIN — deixar bonito quando abrir ================== */
+.admin-panel{margin-top:10px}
+.admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:980px){ .admin-grid{grid-template-columns:1fr;} }
+.admin-card{
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(20,20,20,.65);
+  border-radius: var(--radius);
+  padding:14px;
 }
+.admin-list{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+.admin-item{
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.25);
+  border-radius:14px;
+  padding:12px;
+}
+.admin-item .top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap}
+.admin-item .name{font-weight:950}
+.admin-item .meta{color:var(--muted);font-size:12px;margin-top:4px}
+.admin-actions{display:flex;gap:8px;flex-wrap:wrap}
+.textarea{min-height:120px;resize:vertical}
 
-label {
-  font-size: 12px;
-  margin-top: 10px;
-  display: block;
+/* ================== MODAL (se você estiver usando) ================== */
+.modal{
+  position:fixed; inset:0;
+  background: rgba(0,0,0,.78);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:16px;
+  z-index:100;
 }
+.modal.open{display:flex}
+.modal-box{
+  width:min(980px,100%);
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(10,10,10,.92);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow:hidden;
+}
+.modal-top{
+  display:flex;justify-content:space-between;align-items:center;
+  gap:10px;padding:12px;
+  border-bottom:1px solid rgba(255,255,255,.10);
+}
+.modal-t{display:flex;flex-direction:column;gap:2px}
+.player{position:relative;width:100%;aspect-ratio:16/9;background:#000}
+.player iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 
-input {
-  width: 100%;
-  padding: 10px;
-  border-radius: 8px;
-  border: none;
-  outline: none;
-  margin-top: 4px;
-  background: #111;
-  color: #fff;
-}
 
-input::placeholder {
-  color: #aaa;
-}
-
-/* BOTÃO */
-button {
-  width: 100%;
-  padding: 12px;
-  border-radius: 999px;
-  border: none;
-  background: var(--brand);
-  color: #fff;
-  font-size: 15px;
-  font-weight: bold;
-  margin-top: 16px;
-  cursor: pointer;
-  transition: .2s;
-}
-
-button:hover {
-  background: #f6121d;
-}
-
-/* MOBILE */
-@media (max-width: 600px) {
-  .login {
-    padding: 16px;
-  }
-}
