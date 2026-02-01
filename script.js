@@ -1,12 +1,12 @@
 // ======= Storage =======
-const USERS_KEY = "katielle_users_v3";
-const VIDEOS_KEY = "katielle_videos_v3";
-const SESSION_KEY = "katielle_session_v3";
+const USERS_KEY = "katielle_users_v5";
+const VIDEOS_KEY = "katielle_videos_v5";
+const SESSION_KEY = "katielle_session_v5";
 
 // ✅ Senha do ADM
 const ADMIN_PASSWORD = "150423";
 
-// ======= Tópicos =======
+// ======= Tópicos fixos =======
 const TOPIC_META = [
   { key:"start", title:"Primeiro comece aqui", hint:"Boas-vindas e organização da rotina." },
   { key:"stretchmob", title:"Alongamento e Mobilidade", hint:"Soltar, alinhar e melhorar o movimento." },
@@ -15,9 +15,9 @@ const TOPIC_META = [
   { key:"abs", title:"Abdomen", hint:"Core forte para performance e postura." },
 ];
 
-// ======= Vídeos padrão =======
+// ======= Vídeos padrão (sempre terá pelo menos 1) =======
 const DEFAULT_VIDEOS = [
-  { id:"s1", topic:"start", label:"Comece aqui", title:"Boas-vindas à Consultoria", desc:"Como usar a plataforma e montar a rotina.", youtubeId:"px9eEBAQlFo", featured:true },
+  { id:"s1", topic:"start", label:"Comece aqui", title:"Boas-vindas à Consultoria", desc:"Como usar a plataforma e montar a rotina.", youtubeId:"px9eEBAQlFo", featured:true }
 ];
 
 // ======= Utils =======
@@ -41,13 +41,18 @@ function setUsers(u){ setObj(USERS_KEY, u); }
 
 function getVideos(){
   let v = getObj(VIDEOS_KEY);
-  if(!v){
+  if(!v || !Array.isArray(v) || v.length === 0){
     v = DEFAULT_VIDEOS;
     setObj(VIDEOS_KEY, v);
   }
   return v;
 }
-function setVideos(v){ setObj(VIDEOS_KEY, v); }
+function setVideos(v){
+  if(!Array.isArray(v) || v.length === 0){
+    v = DEFAULT_VIDEOS;
+  }
+  setObj(VIDEOS_KEY, v);
+}
 
 function planToMonths(plan){
   if (plan === "3m") return 3;
@@ -72,12 +77,23 @@ function formatDateBR(dt){
 function isExpired(expiresAt){
   return Date.now() > new Date(expiresAt).getTime();
 }
-function getYoutubeId(v){
-  if (v.youtubeId) return v.youtubeId;
-  return null;
+function extractYoutubeId(input){
+  const t = (input||"").trim();
+  if(!t) return "";
+  // se colar URL, tenta extrair
+  if(t.includes("youtu.be/")){
+    return t.split("youtu.be/")[1].split(/[?&]/)[0];
+  }
+  if(t.includes("youtube.com")){
+    const m = t.match(/[?&]v=([^?&]+)/);
+    if(m && m[1]) return m[1];
+    const shorts = t.match(/shorts\/([^?&]+)/);
+    if(shorts && shorts[1]) return shorts[1];
+  }
+  return t; // já é ID
 }
 
-// ======= Abas (garantido sem erro) =======
+// ======= Abas =======
 function setTab(which){
   const isLogin = which === "login";
   const isReg = which === "register";
@@ -87,6 +103,7 @@ function setTab(which){
   el("tabRegister").classList.toggle("active", isReg);
   el("tabAdmin").classList.toggle("active", isAdm);
 
+  // ✅ Só 1 seção aparece (as outras ficam ocultas)
   el("loginForm").classList.toggle("hidden", !isLogin);
   el("registerForm").classList.toggle("hidden", !isReg);
   el("adminForm").classList.toggle("hidden", !isAdm);
@@ -95,14 +112,14 @@ function setTab(which){
   el("regMsg").textContent = "";
   el("adminMsg").textContent = "";
 
-  if (isAdm) adminLock();
+  if(isAdm) adminLock();
 }
 
 el("tabLogin").addEventListener("click", ()=> setTab("login"));
 el("tabRegister").addEventListener("click", ()=> setTab("register"));
 el("tabAdmin").addEventListener("click", ()=> setTab("admin"));
 
-// ======= Plataforma (render) =======
+// ======= Plataforma =======
 function makeCard(v, topicTitle){
   const card = document.createElement("div");
   card.className = "card";
@@ -118,7 +135,7 @@ function makeCard(v, topicTitle){
 }
 
 function openVideo(v, topicTitle){
-  const id = getYoutubeId(v);
+  const id = v.youtubeId;
   if(!id){ alert("Vídeo sem youtubeId válido."); return; }
 
   el("modalTitle").textContent = v.title;
@@ -134,39 +151,14 @@ function openVideo(v, topicTitle){
   `;
   el("modal").classList.add("open");
 }
-
 function closeVideo(){
   el("modal").classList.remove("open");
   el("player").innerHTML = "";
 }
 
-function buildRow(topic, items){
-  const section = document.createElement("section");
-  section.className = "section";
-  section.id = topic.key;
-
-  const head = document.createElement("div");
-  head.className = "section-head";
-  head.innerHTML = `
-    <div>
-      <h3>${topic.title}</h3>
-      <p>${topic.hint || ""}</p>
-    </div>
-  `;
-  section.appendChild(head);
-
-  const row = document.createElement("div");
-  row.className = "row";
-  items.forEach(v => row.appendChild(makeCard(v, topic.title)));
-
-  section.appendChild(row);
-  return section;
-}
-
 function renderPlatform(){
   const container = el("modules");
   container.innerHTML = "";
-
   const q = normalize(searchText);
   const vids = getVideos();
 
@@ -178,7 +170,26 @@ function renderPlatform(){
     });
 
     if(q && list.length === 0) return;
-    container.appendChild(buildRow(topic, list));
+
+    const section = document.createElement("section");
+    section.className = "section";
+    section.id = topic.key;
+
+    section.innerHTML = `
+      <div class="section-head">
+        <div>
+          <h3>${topic.title}</h3>
+          <p>${topic.hint || ""}</p>
+        </div>
+      </div>
+    `;
+
+    const row = document.createElement("div");
+    row.className = "row";
+    list.forEach(v => row.appendChild(makeCard(v, topic.title)));
+
+    section.appendChild(row);
+    container.appendChild(section);
   });
 }
 
@@ -227,13 +238,11 @@ el("loginForm").addEventListener("submit", (e) => {
 
 el("logoutBtn").addEventListener("click", goLogin);
 
-// Busca
 el("searchInput").addEventListener("input", (e)=> {
   searchText = e.target.value;
   renderPlatform();
 });
 
-// Hero buttons
 el("playFeatured").addEventListener("click", ()=> {
   const vids = getVideos();
   const featured = vids.find(v => v.featured) || vids[0];
@@ -245,7 +254,6 @@ el("scrollTopics").addEventListener("click", ()=> {
   el("topicsAnchor").scrollIntoView({ behavior:"smooth" });
 });
 
-// Footer nav
 document.querySelectorAll(".fbtn").forEach(btn => {
   btn.addEventListener("click", ()=> {
     const id = btn.dataset.go;
@@ -259,7 +267,7 @@ el("closeModal").addEventListener("click", closeVideo);
 el("modal").addEventListener("click", (e)=>{ if(e.target.id==="modal") closeVideo(); });
 document.addEventListener("keydown", (e)=>{ if(e.key==="Escape") closeVideo(); });
 
-// ======= Cadastro de alunos (Admin) =======
+// ======= Cadastro de alunos =======
 el("registerForm").addEventListener("submit", (e) => {
   e.preventDefault();
   const name = el("regName").value.trim();
@@ -307,14 +315,15 @@ el("wipeUsersBtn").addEventListener("click", ()=> {
   alert("Alunos apagados.");
 });
 
-// ======= ADMIN VÍDEOS (PAINEL) =======
+// ======= ADMIN VÍDEOS (REAL) =======
 let adminUnlocked = false;
 
 function adminLock(){
   adminUnlocked = false;
   el("adminPanel").classList.add("hidden");
-  el("adminPass").value = "";
   el("adminMsg").textContent = "";
+  el("adminPass").value = "";
+  clearVideoForm();
 }
 
 function adminUnlock(){
@@ -341,7 +350,8 @@ function renderAdminList(){
   list.innerHTML = "";
 
   const vids = getVideos();
-  const sorted = [...vids].sort((a,b)=> {
+
+  const sorted = [...vids].sort((a,b)=>{
     if(a.topic !== b.topic) return a.topic.localeCompare(b.topic);
     return (a.title||"").localeCompare(b.title||"");
   });
@@ -359,7 +369,7 @@ function renderAdminList(){
         </div>
         <div class="admin-actions">
           <button class="btn" type="button" data-edit="${v.id}">Editar</button>
-          <button class="btn" type="button" data-del="${v.id}">Apagar</button>
+          <button class="btn danger" type="button" data-del="${v.id}">Apagar</button>
         </div>
       </div>
     `;
@@ -367,8 +377,8 @@ function renderAdminList(){
     item.querySelector("[data-edit]").addEventListener("click", ()=> loadVideoToForm(v.id));
     item.querySelector("[data-del]").addEventListener("click", ()=> {
       if(!confirm("Apagar este vídeo?")) return;
-      const newV = getVideos().filter(x => x.id !== v.id);
-      setVideos(newV);
+      const kept = getVideos().filter(x => x.id !== v.id);
+      setVideos(kept);
       renderAdminList();
       renderPlatform();
     });
@@ -380,13 +390,15 @@ function renderAdminList(){
 function loadVideoToForm(id){
   const v = getVideos().find(x => x.id === id);
   if(!v) return;
+
   el("videoId").value = v.id;
   el("videoTopic").value = v.topic;
   el("videoLabel").value = v.label || "";
   el("videoTitle").value = v.title || "";
   el("videoDesc").value = v.desc || "";
   el("videoYT").value = v.youtubeId || "";
-  el("adminMsg").textContent = "Editando vídeo: " + v.title;
+
+  el("adminMsg").textContent = "Editando: " + v.title;
 }
 
 function clearVideoForm(){
@@ -396,18 +408,20 @@ function clearVideoForm(){
   el("videoTitle").value = "";
   el("videoDesc").value = "";
   el("videoYT").value = "";
-  el("adminMsg").textContent = "Formulário limpo.";
 }
 
 el("saveVideoBtn").addEventListener("click", ()=> {
-  if(!adminUnlocked){ el("adminMsg").textContent = "Entre no painel ADM primeiro."; return; }
+  if(!adminUnlocked){
+    el("adminMsg").textContent = "Entre no painel ADM primeiro.";
+    return;
+  }
 
   const id = el("videoId").value || uid();
   const topic = el("videoTopic").value;
   const label = el("videoLabel").value.trim();
   const title = el("videoTitle").value.trim();
   const desc = el("videoDesc").value.trim();
-  const youtubeId = el("videoYT").value.trim();
+  const youtubeId = extractYoutubeId(el("videoYT").value);
 
   if(!title || !youtubeId){
     el("adminMsg").textContent = "Preencha pelo menos Título e YouTube ID.";
@@ -415,25 +429,24 @@ el("saveVideoBtn").addEventListener("click", ()=> {
   }
 
   const vids = getVideos();
-  const exists = vids.findIndex(v => v.id === id);
+  const idx = vids.findIndex(v => v.id === id);
 
   const payload = { id, topic, label, title, desc, youtubeId };
 
-  if(exists >= 0){
-    vids[exists] = { ...vids[exists], ...payload };
-    setVideos(vids);
-    el("adminMsg").textContent = "Vídeo atualizado!";
-  } else {
-    setVideos([...vids, payload]);
-    el("adminMsg").textContent = "Vídeo adicionado!";
-  }
+  if(idx >= 0) vids[idx] = { ...vids[idx], ...payload };
+  else vids.push(payload);
 
+  setVideos(vids);
   renderAdminList();
   renderPlatform();
   clearVideoForm();
+  el("adminMsg").textContent = "Salvo com sucesso!";
 });
 
-el("clearVideoBtn").addEventListener("click", clearVideoForm);
+el("clearVideoBtn").addEventListener("click", ()=> {
+  clearVideoForm();
+  el("adminMsg").textContent = "Formulário limpo.";
+});
 
 el("exportVideosBtn").addEventListener("click", ()=> {
   if(!adminUnlocked){ el("adminMsg").textContent = "Entre no painel ADM primeiro."; return; }
@@ -445,7 +458,7 @@ el("importVideosBtn").addEventListener("click", ()=> {
   if(!adminUnlocked){ el("adminMsg").textContent = "Entre no painel ADM primeiro."; return; }
   try{
     const txt = el("videosJson").value.trim();
-    if(!txt){ el("adminMsg").textContent = "Cole o JSON no campo abaixo."; return; }
+    if(!txt) { el("adminMsg").textContent = "Cole o JSON no campo abaixo."; return; }
     const parsed = JSON.parse(txt);
     if(!Array.isArray(parsed)) throw new Error("JSON precisa ser uma lista (array).");
     setVideos(parsed);
@@ -457,18 +470,15 @@ el("importVideosBtn").addEventListener("click", ()=> {
   }
 });
 
-// ======= init =======
+// ======= Init =======
 el("year").textContent = new Date().getFullYear();
 setTab("login");
 adminLock();
 
-// Auto login se existir sessão
 const session = getObj(SESSION_KEY);
-if(session && session.username){
-  const users = getUsers();
-  const u = users[session.username];
+if(session?.username){
+  const u = getUsers()[session.username];
   if(u && !isExpired(u.expiresAt)){
     goPlatform({ username: session.username });
   }
 }
-
