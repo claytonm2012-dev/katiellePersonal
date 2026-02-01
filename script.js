@@ -15,7 +15,7 @@ const TOPIC_META = [
   { key:"abs", title:"Abdomen", hint:"Core forte para performance e postura." },
 ];
 
-// ======= Vídeos padrão (sempre terá pelo menos 1) =======
+// ======= Vídeos padrão =======
 const DEFAULT_VIDEOS = [
   { id:"s1", topic:"start", label:"Comece aqui", title:"Boas-vindas à Consultoria", desc:"Como usar a plataforma e montar a rotina.", youtubeId:"px9eEBAQlFo", featured:true }
 ];
@@ -45,7 +45,6 @@ function getVideos(){
     v = DEFAULT_VIDEOS;
     setObj(VIDEOS_KEY, v);
   }
-  // ✅ garante que sempre exista 1 featured
   if(!v.some(x => x.featured)){
     v[0].featured = true;
     setObj(VIDEOS_KEY, v);
@@ -53,13 +52,8 @@ function getVideos(){
   return v;
 }
 function setVideos(v){
-  if(!Array.isArray(v) || v.length === 0){
-    v = DEFAULT_VIDEOS;
-  }
-  // ✅ garante que sempre exista 1 featured
-  if(!v.some(x => x.featured)){
-    v[0].featured = true;
-  }
+  if(!Array.isArray(v) || v.length === 0) v = DEFAULT_VIDEOS;
+  if(!v.some(x => x.featured)) v[0].featured = true;
   setObj(VIDEOS_KEY, v);
 }
 
@@ -89,9 +83,7 @@ function isExpired(expiresAt){
 function extractYoutubeId(input){
   const t = (input||"").trim();
   if(!t) return "";
-  if(t.includes("youtu.be/")){
-    return t.split("youtu.be/")[1].split(/[?&]/)[0];
-  }
+  if(t.includes("youtu.be/")) return t.split("youtu.be/")[1].split(/[?&]/)[0];
   if(t.includes("youtube.com")){
     const m = t.match(/[?&]v=([^?&]+)/);
     if(m && m[1]) return m[1];
@@ -126,21 +118,7 @@ el("tabLogin").addEventListener("click", ()=> setTab("login"));
 el("tabRegister").addEventListener("click", ()=> setTab("register"));
 el("tabAdmin").addEventListener("click", ()=> setTab("admin"));
 
-// ======= Plataforma: Cards / Modal =======
-function makeCard(v, topicTitle){
-  const card = document.createElement("div");
-  card.className = "card";
-  card.innerHTML = `
-    <div class="thumb"><span class="badge">${v.label || "Aula"}</span></div>
-    <div class="meta">
-      <p class="title">${v.title}</p>
-      <p class="desc">${v.desc || ""}<br><span class="muted small">${topicTitle}</span></p>
-    </div>
-  `;
-  card.addEventListener("click", ()=> openVideo(v, topicTitle));
-  return card;
-}
-
+// ======= Modal =======
 function openVideo(v, topicTitle){
   const id = v.youtubeId;
   if(!id){ alert("Vídeo sem youtubeId válido."); return; }
@@ -163,11 +141,26 @@ function closeVideo(){
   el("player").innerHTML = "";
 }
 
-/* ✅ NOVO: row com setas (Netflix-like) */
+function makeCard(v, topicTitle){
+  const card = document.createElement("div");
+  card.className = "card";
+  card.innerHTML = `
+    <div class="thumb"><span class="badge">${v.label || "Aula"}</span></div>
+    <div class="meta">
+      <p class="title">${v.title}</p>
+      <p class="desc">${v.desc || ""}<br><span class="muted small">${topicTitle}</span></p>
+    </div>
+  `;
+  card.addEventListener("click", ()=> openVideo(v, topicTitle));
+  return card;
+}
+
+/* ✅ row com setas */
 function scrollRow(rowEl, dir){
   const amount = Math.max(280, rowEl.clientWidth * 0.85);
   rowEl.scrollBy({ left: dir * amount, behavior: "smooth" });
 }
+
 function buildRow(topic, list){
   const section = document.createElement("section");
   section.className = "section";
@@ -182,10 +175,11 @@ function buildRow(topic, list){
     </div>
   `;
 
+  // ✅ Sempre mostra algo, mesmo vazio
   if(!list.length){
     const empty = document.createElement("div");
     empty.className = "empty";
-    empty.textContent = "Nenhuma aula cadastrada neste tópico.";
+    empty.textContent = "Ainda não há aulas neste tópico.";
     section.appendChild(empty);
     return section;
   }
@@ -219,8 +213,11 @@ function buildRow(topic, list){
   return section;
 }
 
+/* ✅ CORREÇÃO PRINCIPAL: sempre renderiza TODOS os tópicos */
 function renderPlatform(){
   const container = el("modules");
+  if(!container) return;
+
   container.innerHTML = "";
   const q = normalize(searchText);
   const vids = getVideos();
@@ -232,8 +229,7 @@ function renderPlatform(){
       return q ? hay.includes(q) : true;
     });
 
-    if(q && list.length === 0) return;
-
+    // ✅ não pula tópico na busca; só muda o texto
     container.appendChild(buildRow(topic, list));
   });
 }
@@ -299,20 +295,23 @@ el("scrollTopics").addEventListener("click", ()=> {
   el("topicsAnchor").scrollIntoView({ behavior:"smooth" });
 });
 
-/* ✅ NOVO: scroll com offset para rodapé fixo */
+/* ✅ scroll com offset (topbar + rodapé fixo) */
 function scrollToSectionWithOffset(target){
   if(!target) return;
-  const fixedFooter = document.querySelector(".footer-nav");
-  const footerH = fixedFooter ? fixedFooter.getBoundingClientRect().height : 0;
   const topbarH = document.querySelector(".topbar")?.getBoundingClientRect().height || 0;
   const y = target.getBoundingClientRect().top + window.scrollY - topbarH - 12;
   window.scrollTo({ top: y, behavior: "smooth" });
 }
 
+/* ✅ CORREÇÃO: se a seção não existir por algum motivo, força render e tenta de novo */
 document.querySelectorAll(".fbtn").forEach(btn => {
   btn.addEventListener("click", ()=> {
     const id = btn.dataset.go;
-    const target = document.getElementById(id);
+    let target = document.getElementById(id);
+    if(!target){
+      renderPlatform();
+      target = document.getElementById(id);
+    }
     scrollToSectionWithOffset(target);
   });
 });
@@ -370,7 +369,7 @@ el("wipeUsersBtn").addEventListener("click", ()=> {
   alert("Alunos apagados.");
 });
 
-// ======= ADMIN VÍDEOS (REAL) =======
+// ======= ADMIN =======
 let adminUnlocked = false;
 
 function adminLock(){
@@ -380,7 +379,6 @@ function adminLock(){
   el("adminPass").value = "";
   clearVideoForm();
 }
-
 function adminUnlock(){
   adminUnlocked = true;
   el("adminPanel").classList.remove("hidden");
@@ -397,14 +395,13 @@ el("adminEnter").addEventListener("click", ()=> {
   }
   adminUnlock();
 });
-
 el("adminExit").addEventListener("click", adminLock);
 
 function renderAdminList(){
   const list = el("adminList");
   list.innerHTML = "";
-
   const vids = getVideos();
+
   const sorted = [...vids].sort((a,b)=>{
     if(a.topic !== b.topic) return a.topic.localeCompare(b.topic);
     return (a.title||"").localeCompare(b.title||"");
@@ -437,8 +434,6 @@ function renderAdminList(){
       renderAdminList();
       renderPlatform();
     });
-
-    // ✅ NOVO: definir destaque
     item.querySelector("[data-feat]").addEventListener("click", ()=> {
       const all = getVideos().map(x => ({ ...x, featured: x.id === v.id }));
       setVideos(all);
@@ -494,14 +489,10 @@ el("saveVideoBtn").addEventListener("click", ()=> {
 
   const vids = getVideos();
   const idx = vids.findIndex(v => v.id === id);
-
   const payload = { id, topic, label, title, desc, youtubeId };
 
-  if(idx >= 0){
-    vids[idx] = { ...vids[idx], ...payload };
-  } else {
-    vids.push(payload);
-  }
+  if(idx >= 0) vids[idx] = { ...vids[idx], ...payload };
+  else vids.push(payload);
 
   setVideos(vids);
   renderAdminList();
