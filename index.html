@@ -1,221 +1,237 @@
-<div class="app" id="app">
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Consultoria dos Sonhos</title>
 
-  <!-- LOGIN -->
-  <section class="login" id="loginScreen">
-    <div class="login-card">
-      <div class="brandline">
-        <div class="brand-dot"></div>
-        <div>
-          <h1 class="brand-title">Consultoria dos Sonho</h1>
-          <p class="brand-sub">Katielle Amaral</p>
-        </div>
-      </div>
+  <!-- CSS -->
+  <link rel="stylesheet" href="./style.css">
+</head>
 
-      <div class="tabs">
-        <button class="tab active" id="tabLogin">Entrar</button>
-        <button class="tab" id="tabRegister">Cadastrar (Admin)</button>
-        <button class="tab" id="tabAdmin">Painel ADM</button>
-      </div>
+<body>
+  <div class="app" id="app">
 
-      <!-- LOGIN -->
-      <form id="loginForm" class="form">
-        <h2>Entrar</h2>
-        <p class="muted">Acesse sua plataforma de aulas.</p>
-
-        <label>Usuário
-          <input id="loginUser" type="text" placeholder="Digite seu usuário" required />
-        </label>
-        <label>Senha
-          <input id="loginPass" type="password" placeholder="Digite sua senha" required />
-        </label>
-
-        <button class="btn primary" type="submit">Entrar</button>
-        <div class="row">
-          <button class="link" type="button" id="demoCreateUser">Criar usuário demo</button>
-          <button class="link" type="button" id="demoLogin">Entrar no demo</button>
-        </div>
-        <p class="small muted" id="loginMsg"></p>
-      </form>
-
-      <!-- CADASTRO ALUNO (ADMIN) -->
-      <form id="registerForm" class="form hidden">
-        <h2>Ficha de cadastro (Admin)</h2>
-        <p class="muted">Cadastre um aluno e defina o tempo de acesso.</p>
-
-        <label>Nome do aluno
-          <input id="regName" type="text" placeholder="Ex: Maria Silva" required />
-        </label>
-
-        <label>Usuário (login)
-          <input id="regUser" type="text" placeholder="Ex: maria" required />
-        </label>
-
-        <label>Senha
-          <input id="regPass" type="password" placeholder="Crie uma senha" required />
-        </label>
-
-        <label>Tempo de acesso
-          <select id="regPlan" required>
-            <option value="3m">3 meses</option>
-            <option value="6m">6 meses</option>
-            <option value="1y">1 ano</option>
-          </select>
-        </label>
-
-        <button class="btn primary" type="submit">Cadastrar aluno</button>
-
-        <div class="row">
-          <button class="btn" type="button" id="listUsersBtn">Ver cadastrados</button>
-          <button class="btn" type="button" id="wipeUsersBtn">Apagar todos</button>
+    <!-- LOGIN -->
+    <section class="login" id="loginScreen">
+      <div class="login-card">
+        <div class="brandline">
+          <div class="brand-dot"></div>
+          <div>
+            <h1 class="brand-title">Consultoria dos Sonho</h1>
+            <p class="brand-sub">Katielle Amaral</p>
+          </div>
         </div>
 
-        <p class="small muted" id="regMsg"></p>
-      </form>
-
-      <!-- PAINEL ADM (VIDEOS) -->
-      <form id="adminForm" class="form hidden">
-        <h2>Painel ADM — Vídeos</h2>
-        <p class="muted">Adicionar / Editar / Apagar vídeos sem mexer no código.</p>
-
-        <label>Senha do ADM
-          <input id="adminPass" type="password" placeholder="Digite a senha do ADM" required />
-        </label>
-
-        <div class="row">
-          <button class="btn primary" type="button" id="adminEnter">Entrar no painel</button>
-          <button class="btn" type="button" id="adminExit">Sair</button>
+        <div class="tabs">
+          <button class="tab active" id="tabLogin">Entrar</button>
+          <button class="tab" id="tabRegister">Cadastrar (Admin)</button>
+          <button class="tab" id="tabAdmin">Painel ADM</button>
         </div>
 
-        <div class="admin-panel hidden" id="adminPanel">
-          <div class="admin-grid">
-            <div class="admin-card">
-              <h3>Adicionar / Editar vídeo</h3>
+        <!-- LOGIN -->
+        <form id="loginForm" class="form">
+          <h2>Entrar</h2>
+          <p class="muted">Acesse sua plataforma de aulas.</p>
 
-              <input type="hidden" id="videoId" />
+          <label>Usuário
+            <input id="loginUser" type="text" placeholder="Digite seu usuário" required />
+          </label>
+          <label>Senha
+            <input id="loginPass" type="password" placeholder="Digite sua senha" required />
+          </label>
 
-              <label>Tópico
-                <select id="videoTopic">
-                  <option value="start">Primeiro comece aqui</option>
-                  <option value="stretchmob">Alongamento e Mobilidade</option>
-                  <option value="lower">Inferiores</option>
-                  <option value="upper">Superiores</option>
-                  <option value="abs">Abdomen</option>
-                </select>
-              </label>
+          <button class="btn primary" type="submit">Entrar</button>
+          <div class="row">
+            <button class="link" type="button" id="demoCreateUser">Criar usuário demo</button>
+            <button class="link" type="button" id="demoLogin">Entrar no demo</button>
+          </div>
+          <p class="small muted" id="loginMsg"></p>
+        </form>
 
-              <label>Etiqueta (badge)
-                <input id="videoLabel" type="text" placeholder="Ex: Glúteos / Core / Mobilidade" />
-              </label>
+        <!-- CADASTRO ALUNO (ADMIN) -->
+        <form id="registerForm" class="form hidden">
+          <h2>Ficha de cadastro (Admin)</h2>
+          <p class="muted">Cadastre um aluno e defina o tempo de acesso.</p>
 
-              <label>Título
-                <input id="videoTitle" type="text" placeholder="Nome da aula" required />
-              </label>
+          <label>Nome do aluno
+            <input id="regName" type="text" placeholder="Ex: Maria Silva" required />
+          </label>
 
-              <label>Descrição
-                <input id="videoDesc" type="text" placeholder="Breve descrição" />
-              </label>
+          <label>Usuário (login)
+            <input id="regUser" type="text" placeholder="Ex: maria" required />
+          </label>
 
-              <label>YouTube ID (ex: px9eEBAQlFo)
-                <input id="videoYT" type="text" placeholder="Cole só o ID do YouTube" required />
-              </label>
+          <label>Senha
+            <input id="regPass" type="password" placeholder="Crie uma senha" required />
+          </label>
 
-              <div class="row">
-                <button class="btn primary" type="button" id="saveVideoBtn">Salvar vídeo</button>
-                <button class="btn" type="button" id="clearVideoBtn">Limpar</button>
+          <label>Tempo de acesso
+            <select id="regPlan" required>
+              <option value="3m">3 meses</option>
+              <option value="6m">6 meses</option>
+              <option value="1y">1 ano</option>
+            </select>
+          </label>
+
+          <button class="btn primary" type="submit">Cadastrar aluno</button>
+
+          <div class="row">
+            <button class="btn" type="button" id="listUsersBtn">Ver cadastrados</button>
+            <button class="btn" type="button" id="wipeUsersBtn">Apagar todos</button>
+          </div>
+
+          <p class="small muted" id="regMsg"></p>
+        </form>
+
+        <!-- PAINEL ADM (VIDEOS) -->
+        <form id="adminForm" class="form hidden">
+          <h2>Painel ADM — Vídeos</h2>
+          <p class="muted">Adicionar / Editar / Apagar vídeos sem mexer no código.</p>
+
+          <label>Senha do ADM
+            <input id="adminPass" type="password" placeholder="Digite a senha do ADM" required />
+          </label>
+
+          <div class="row">
+            <button class="btn primary" type="button" id="adminEnter">Entrar no painel</button>
+            <button class="btn" type="button" id="adminExit">Sair</button>
+          </div>
+
+          <div class="admin-panel hidden" id="adminPanel">
+            <div class="admin-grid">
+              <div class="admin-card">
+                <h3>Adicionar / Editar vídeo</h3>
+
+                <input type="hidden" id="videoId" />
+
+                <label>Tópico
+                  <select id="videoTopic">
+                    <option value="start">Primeiro comece aqui</option>
+                    <option value="stretchmob">Alongamento e Mobilidade</option>
+                    <option value="lower">Inferiores</option>
+                    <option value="upper">Superiores</option>
+                    <option value="abs">Abdomen</option>
+                  </select>
+                </label>
+
+                <label>Etiqueta (badge)
+                  <input id="videoLabel" type="text" placeholder="Ex: Glúteos / Core / Mobilidade" />
+                </label>
+
+                <label>Título
+                  <input id="videoTitle" type="text" placeholder="Nome da aula" required />
+                </label>
+
+                <label>Descrição
+                  <input id="videoDesc" type="text" placeholder="Breve descrição" />
+                </label>
+
+                <label>YouTube ID (ex: px9eEBAQlFo)
+                  <input id="videoYT" type="text" placeholder="Cole só o ID do YouTube" required />
+                </label>
+
+                <div class="row">
+                  <button class="btn primary" type="button" id="saveVideoBtn">Salvar vídeo</button>
+                  <button class="btn" type="button" id="clearVideoBtn">Limpar</button>
+                </div>
+
+                <p class="small muted" id="adminMsg"></p>
               </div>
 
-              <p class="small muted" id="adminMsg"></p>
-            </div>
+              <div class="admin-card">
+                <h3>Lista de vídeos</h3>
+                <p class="muted small">Toque em “Editar” para carregar no formulário.</p>
+                <div class="admin-list" id="adminList"></div>
 
-            <div class="admin-card">
-              <h3>Lista de vídeos</h3>
-              <p class="muted small">Toque em “Editar” para carregar no formulário.</p>
-              <div class="admin-list" id="adminList"></div>
+                <div class="row" style="margin-top:10px;">
+                  <button class="btn" type="button" id="exportVideosBtn">Exportar JSON</button>
+                  <button class="btn" type="button" id="importVideosBtn">Importar JSON</button>
+                </div>
 
-              <div class="row" style="margin-top:10px;">
-                <button class="btn" type="button" id="exportVideosBtn">Exportar JSON</button>
-                <button class="btn" type="button" id="importVideosBtn">Importar JSON</button>
+                <textarea id="videosJson" class="textarea" placeholder="Cole aqui o JSON para importar/exportar..."></textarea>
               </div>
-
-              <textarea id="videosJson" class="textarea" placeholder="Cole aqui o JSON para importar/exportar..."></textarea>
             </div>
           </div>
-        </div>
-      </form>
+        </form>
 
-    </div>
-  </section>
-
-  <!-- PLATAFORMA -->
-  <section class="platform hidden" id="platformScreen">
-    <header class="topbar">
-      <div class="topbar-inner">
-        <div class="logo">
-          <span class="logo-mark">K</span>
-          <div class="logo-text">
-            <strong>Consultoria dos Sonho</strong>
-            <span>Katielle Amaral</span>
-          </div>
-        </div>
-
-        <div class="top-actions">
-          <div class="search">
-            <span class="icon">🔎</span>
-            <input id="searchInput" placeholder="Buscar aulas, tópicos..." />
-          </div>
-          <button class="btn" id="logoutBtn">Sair</button>
-        </div>
       </div>
-    </header>
+    </section>
 
-    <main class="wrap">
-      <section class="hero">
-        <div class="hero-inner">
-          <div class="hero-text">
-            <h2>Treine com método. Evolua com consistência.</h2>
-            <p class="muted">Use a busca ou o rodapé para navegar pelos tópicos.</p>
-            <div class="hero-actions">
-              <button class="btn primary" id="playFeatured">▶ Assistir aula em destaque</button>
-              <button class="btn" id="scrollTopics">Ver tópicos</button>
+    <!-- PLATAFORMA -->
+    <section class="platform hidden" id="platformScreen">
+      <header class="topbar">
+        <div class="topbar-inner">
+          <div class="logo">
+            <span class="logo-mark">K</span>
+            <div class="logo-text">
+              <strong>Consultoria dos Sonho</strong>
+              <span>Katielle Amaral</span>
             </div>
           </div>
 
-          <div class="hero-card">
-            <p class="card-title">Seu acesso</p>
-            <p class="muted small" id="accessInfo">Carregando…</p>
+          <div class="top-actions">
+            <div class="search">
+              <span class="icon">🔎</span>
+              <input id="searchInput" placeholder="Buscar aulas, tópicos..." />
+            </div>
+            <button class="btn" id="logoutBtn">Sair</button>
           </div>
         </div>
-      </section>
+      </header>
 
-      <div id="topicsAnchor"></div>
-      <div id="modules"></div>
+      <main class="wrap">
+        <section class="hero">
+          <div class="hero-inner">
+            <div class="hero-text">
+              <h2>Treine com método. Evolua com consistência.</h2>
+              <p class="muted">Use a busca ou o rodapé para navegar pelos tópicos.</p>
+              <div class="hero-actions">
+                <button class="btn primary" id="playFeatured">▶ Assistir aula em destaque</button>
+                <button class="btn" id="scrollTopics">Ver tópicos</button>
+              </div>
+            </div>
 
-      <footer class="footer-nav">
-        <button class="fbtn" data-go="start">Primeiro comece aqui</button>
-        <button class="fbtn" data-go="stretchmob">Alongamento e Mobilidade</button>
-        <button class="fbtn" data-go="lower">Inferiores</button>
-        <button class="fbtn" data-go="upper">Superiores</button>
-        <button class="fbtn" data-go="abs">Abdomen</button>
-      </footer>
+            <div class="hero-card">
+              <p class="card-title">Seu acesso</p>
+              <p class="muted small" id="accessInfo">Carregando…</p>
+            </div>
+          </div>
+        </section>
 
-      <footer class="footer">
-        <p class="muted small">© <span id="year"></span> Consultoria dos Sonho / Katielle Amaral</p>
-      </footer>
-    </main>
-  </section>
+        <div id="topicsAnchor"></div>
+        <div id="modules"></div>
 
-  <!-- MODAL VIDEO -->
-  <div class="modal" id="modal">
-    <div class="modal-box">
-      <div class="modal-top">
-        <div class="modal-t">
-          <strong id="modalTitle">Título</strong>
-          <span id="modalSub" class="muted small">Tópico • Aula</span>
+        <footer class="footer-nav">
+          <button class="fbtn" data-go="start">Primeiro comece aqui</button>
+          <button class="fbtn" data-go="stretchmob">Alongamento e Mobilidade</button>
+          <button class="fbtn" data-go="lower">Inferiores</button>
+          <button class="fbtn" data-go="upper">Superiores</button>
+          <button class="fbtn" data-go="abs">Abdomen</button>
+        </footer>
+
+        <footer class="footer">
+          <p class="muted small">© <span id="year"></span> Consultoria dos Sonho / Katielle Amaral</p>
+        </footer>
+      </main>
+    </section>
+
+    <!-- MODAL VIDEO -->
+    <div class="modal" id="modal">
+      <div class="modal-box">
+        <div class="modal-top">
+          <div class="modal-t">
+            <strong id="modalTitle">Título</strong>
+            <span id="modalSub" class="muted small">Tópico • Aula</span>
+          </div>
+          <button class="btn" id="closeModal">Fechar ✕</button>
         </div>
-        <button class="btn" id="closeModal">Fechar ✕</button>
+        <div class="player" id="player"></div>
       </div>
-      <div class="player" id="player"></div>
     </div>
-  </div>
 
-</div>
+  </div><!-- /#app -->
+
+  <!-- JS -->
+  <script src="./script.js"></script>
+</body>
+</html>
