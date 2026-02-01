@@ -575,5 +575,62 @@ body{
     width: calc(100% - 20px);
   }
 }
+/* ==========================
+   FIX: Estilos faltando do carrossel (row-wrap + nav)
+   (necessário porque o JS usa row-wrap/nav)
+========================== */
+
+.row-wrap{
+  position: relative;
+  padding: 6px 42px; /* espaço para as setas */
+}
+
+@media (max-width: 560px){
+  .row-wrap{ padding: 6px 34px; }
+}
+
+/* Setas do carrossel */
+.nav{
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 64px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(0,0,0,.55);
+  color: #fff;
+  cursor: pointer;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  user-select: none;
+}
+
+.nav:hover{
+  background: rgba(0,0,0,.72);
+  filter: brightness(1.08);
+}
+
+.nav.left{ left: 6px; }
+.nav.right{ right: 6px; }
+
+/* Linha de cards dentro do row-wrap */
+.row-wrap .row{
+  margin-top: 0; /* já tem padding no row-wrap */
+  padding: 8px 2px;
+  scroll-behavior: smooth;
+}
+
+/* “Nenhuma aula” mais bonito */
+.empty{
+  margin-top: 10px;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px dashed rgba(255,255,255,.16);
+  background: rgba(0,0,0,.18);
+  color: var(--muted);
+}
+
 
 
