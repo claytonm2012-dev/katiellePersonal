@@ -45,11 +45,20 @@ function getVideos(){
     v = DEFAULT_VIDEOS;
     setObj(VIDEOS_KEY, v);
   }
+  // ✅ garante que sempre exista 1 featured
+  if(!v.some(x => x.featured)){
+    v[0].featured = true;
+    setObj(VIDEOS_KEY, v);
+  }
   return v;
 }
 function setVideos(v){
   if(!Array.isArray(v) || v.length === 0){
     v = DEFAULT_VIDEOS;
+  }
+  // ✅ garante que sempre exista 1 featured
+  if(!v.some(x => x.featured)){
+    v[0].featured = true;
   }
   setObj(VIDEOS_KEY, v);
 }
@@ -80,7 +89,6 @@ function isExpired(expiresAt){
 function extractYoutubeId(input){
   const t = (input||"").trim();
   if(!t) return "";
-  // se colar URL, tenta extrair
   if(t.includes("youtu.be/")){
     return t.split("youtu.be/")[1].split(/[?&]/)[0];
   }
@@ -90,7 +98,7 @@ function extractYoutubeId(input){
     const shorts = t.match(/shorts\/([^?&]+)/);
     if(shorts && shorts[1]) return shorts[1];
   }
-  return t; // já é ID
+  return t;
 }
 
 // ======= Abas =======
@@ -103,7 +111,6 @@ function setTab(which){
   el("tabRegister").classList.toggle("active", isReg);
   el("tabAdmin").classList.toggle("active", isAdm);
 
-  // ✅ Só 1 seção aparece (as outras ficam ocultas)
   el("loginForm").classList.toggle("hidden", !isLogin);
   el("registerForm").classList.toggle("hidden", !isReg);
   el("adminForm").classList.toggle("hidden", !isAdm);
@@ -119,7 +126,7 @@ el("tabLogin").addEventListener("click", ()=> setTab("login"));
 el("tabRegister").addEventListener("click", ()=> setTab("register"));
 el("tabAdmin").addEventListener("click", ()=> setTab("admin"));
 
-// ======= Plataforma =======
+// ======= Plataforma: Cards / Modal =======
 function makeCard(v, topicTitle){
   const card = document.createElement("div");
   card.className = "card";
@@ -156,6 +163,62 @@ function closeVideo(){
   el("player").innerHTML = "";
 }
 
+/* ✅ NOVO: row com setas (Netflix-like) */
+function scrollRow(rowEl, dir){
+  const amount = Math.max(280, rowEl.clientWidth * 0.85);
+  rowEl.scrollBy({ left: dir * amount, behavior: "smooth" });
+}
+function buildRow(topic, list){
+  const section = document.createElement("section");
+  section.className = "section";
+  section.id = topic.key;
+
+  section.innerHTML = `
+    <div class="section-head">
+      <div>
+        <h3>${topic.title}</h3>
+        <p>${topic.hint || ""}</p>
+      </div>
+    </div>
+  `;
+
+  if(!list.length){
+    const empty = document.createElement("div");
+    empty.className = "empty";
+    empty.textContent = "Nenhuma aula cadastrada neste tópico.";
+    section.appendChild(empty);
+    return section;
+  }
+
+  const wrap = document.createElement("div");
+  wrap.className = "row-wrap";
+
+  const left = document.createElement("button");
+  left.className = "nav left btn";
+  left.type = "button";
+  left.textContent = "◀";
+
+  const right = document.createElement("button");
+  right.className = "nav right btn";
+  right.type = "button";
+  right.textContent = "▶";
+
+  const row = document.createElement("div");
+  row.className = "row";
+
+  list.forEach(v => row.appendChild(makeCard(v, topic.title)));
+
+  left.addEventListener("click", ()=> scrollRow(row, -1));
+  right.addEventListener("click", ()=> scrollRow(row, +1));
+
+  wrap.appendChild(left);
+  wrap.appendChild(row);
+  wrap.appendChild(right);
+
+  section.appendChild(wrap);
+  return section;
+}
+
 function renderPlatform(){
   const container = el("modules");
   container.innerHTML = "";
@@ -171,25 +234,7 @@ function renderPlatform(){
 
     if(q && list.length === 0) return;
 
-    const section = document.createElement("section");
-    section.className = "section";
-    section.id = topic.key;
-
-    section.innerHTML = `
-      <div class="section-head">
-        <div>
-          <h3>${topic.title}</h3>
-          <p>${topic.hint || ""}</p>
-        </div>
-      </div>
-    `;
-
-    const row = document.createElement("div");
-    row.className = "row";
-    list.forEach(v => row.appendChild(makeCard(v, topic.title)));
-
-    section.appendChild(row);
-    container.appendChild(section);
+    container.appendChild(buildRow(topic, list));
   });
 }
 
@@ -254,11 +299,21 @@ el("scrollTopics").addEventListener("click", ()=> {
   el("topicsAnchor").scrollIntoView({ behavior:"smooth" });
 });
 
+/* ✅ NOVO: scroll com offset para rodapé fixo */
+function scrollToSectionWithOffset(target){
+  if(!target) return;
+  const fixedFooter = document.querySelector(".footer-nav");
+  const footerH = fixedFooter ? fixedFooter.getBoundingClientRect().height : 0;
+  const topbarH = document.querySelector(".topbar")?.getBoundingClientRect().height || 0;
+  const y = target.getBoundingClientRect().top + window.scrollY - topbarH - 12;
+  window.scrollTo({ top: y, behavior: "smooth" });
+}
+
 document.querySelectorAll(".fbtn").forEach(btn => {
   btn.addEventListener("click", ()=> {
     const id = btn.dataset.go;
     const target = document.getElementById(id);
-    if(target) target.scrollIntoView({ behavior:"smooth", block:"start" });
+    scrollToSectionWithOffset(target);
   });
 });
 
@@ -350,7 +405,6 @@ function renderAdminList(){
   list.innerHTML = "";
 
   const vids = getVideos();
-
   const sorted = [...vids].sort((a,b)=>{
     if(a.topic !== b.topic) return a.topic.localeCompare(b.topic);
     return (a.title||"").localeCompare(b.title||"");
@@ -370,6 +424,7 @@ function renderAdminList(){
         <div class="admin-actions">
           <button class="btn" type="button" data-edit="${v.id}">Editar</button>
           <button class="btn danger" type="button" data-del="${v.id}">Apagar</button>
+          <button class="btn" type="button" data-feat="${v.id}">Destaque</button>
         </div>
       </div>
     `;
@@ -379,6 +434,15 @@ function renderAdminList(){
       if(!confirm("Apagar este vídeo?")) return;
       const kept = getVideos().filter(x => x.id !== v.id);
       setVideos(kept);
+      renderAdminList();
+      renderPlatform();
+    });
+
+    // ✅ NOVO: definir destaque
+    item.querySelector("[data-feat]").addEventListener("click", ()=> {
+      const all = getVideos().map(x => ({ ...x, featured: x.id === v.id }));
+      setVideos(all);
+      el("adminMsg").textContent = `Destaque definido: ${v.title}`;
       renderAdminList();
       renderPlatform();
     });
@@ -433,8 +497,11 @@ el("saveVideoBtn").addEventListener("click", ()=> {
 
   const payload = { id, topic, label, title, desc, youtubeId };
 
-  if(idx >= 0) vids[idx] = { ...vids[idx], ...payload };
-  else vids.push(payload);
+  if(idx >= 0){
+    vids[idx] = { ...vids[idx], ...payload };
+  } else {
+    vids.push(payload);
+  }
 
   setVideos(vids);
   renderAdminList();
