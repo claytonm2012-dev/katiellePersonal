@@ -108,3 +108,48 @@ el("tabAdmin").onclick=()=>switchTab("admin");
 // Init
 el("year").textContent = new Date().getFullYear();
 switchTab("login");
+// ====== FIX: abas (mostrar só uma por vez) ======
+(function () {
+  const $ = (id) => document.getElementById(id);
+
+  function safeHide(el) {
+    if (el) el.classList.add("hidden");
+  }
+  function safeShow(el) {
+    if (el) el.classList.remove("hidden");
+  }
+
+  const tabLogin = $("tabLogin");
+  const tabRegister = $("tabRegister");
+  const tabAdmin = $("tabAdmin");
+
+  const loginForm = $("loginForm");
+  const registerForm = $("registerForm");
+  const adminForm = $("adminForm");
+
+  function setActive(active) {
+    // tabs
+    [tabLogin, tabRegister, tabAdmin].forEach((t) => t && t.classList.remove("active"));
+    if (active === "login" && tabLogin) tabLogin.classList.add("active");
+    if (active === "register" && tabRegister) tabRegister.classList.add("active");
+    if (active === "admin" && tabAdmin) tabAdmin.classList.add("active");
+
+    // forms
+    safeHide(loginForm);
+    safeHide(registerForm);
+    safeHide(adminForm);
+
+    if (active === "login") safeShow(loginForm);
+    if (active === "register") safeShow(registerForm);
+    if (active === "admin") safeShow(adminForm);
+  }
+
+  // clique nas abas
+  tabLogin && tabLogin.addEventListener("click", () => setActive("login"));
+  tabRegister && tabRegister.addEventListener("click", () => setActive("register"));
+  tabAdmin && tabAdmin.addEventListener("click", () => setActive("admin"));
+
+  // estado inicial (só login)
+  setActive("login");
+})();
+
