@@ -1,542 +1,607 @@
-// ======= Storage =======
-const USERS_KEY = "katielle_users_v5";
-const VIDEOS_KEY = "katielle_videos_v5";
-const SESSION_KEY = "katielle_session_v5";
+/* =========
+   JSON Load + Local override (admin changes)
+   ========= */
+const STORAGE_KEY = "consultoria_dos_sonhos_data_v1";
+let DATA = null;
 
-// ✅ Senha do ADM
-const ADMIN_PASSWORD = "150423";
+function $(id){ return document.getElementById(id); }
 
-// ======= Tópicos fixos =======
-const TOPIC_META = [
-  { key:"start", title:"Primeiro comece aqui", hint:"Boas-vindas e organização da rotina." },
-  { key:"stretchmob", title:"Alongamento e Mobilidade", hint:"Soltar, alinhar e melhorar o movimento." },
-  { key:"lower", title:"Inferiores", hint:"Glúteos e pernas (força e definição)." },
-  { key:"upper", title:"Superiores", hint:"Costas, peito, ombro, bíceps e tríceps." },
-  { key:"abs", title:"Abdomen", hint:"Core forte para performance e postura." },
-];
-
-// ======= Vídeos padrão =======
-const DEFAULT_VIDEOS = [
-  { id:"s1", topic:"start", label:"Comece aqui", title:"Boas-vindas à Consultoria", desc:"Como usar a plataforma e montar a rotina.", youtubeId:"px9eEBAQlFo", featured:true }
-];
-
-// ======= Utils =======
-const el = (id) => document.getElementById(id);
-let searchText = "";
-
-function normalize(s){
-  return (s||"").toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
-}
-function uid(){
-  return "v_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16);
-}
-function getObj(key){
-  try{ return JSON.parse(localStorage.getItem(key)) || null; }catch{ return null; }
-}
-function setObj(key, val){
-  localStorage.setItem(key, JSON.stringify(val));
-}
-function getUsers(){ return getObj(USERS_KEY) || {}; }
-function setUsers(u){ setObj(USERS_KEY, u); }
-
-function getVideos(){
-  let v = getObj(VIDEOS_KEY);
-  if(!v || !Array.isArray(v) || v.length === 0){
-    v = DEFAULT_VIDEOS;
-    setObj(VIDEOS_KEY, v);
+async function loadData(){
+  const local = localStorage.getItem(STORAGE_KEY);
+  if(local){
+    DATA = JSON.parse(local);
+    return;
   }
-  if(!v.some(x => x.featured)){
-    v[0].featured = true;
-    setObj(VIDEOS_KEY, v);
-  }
-  return v;
-}
-function setVideos(v){
-  if(!Array.isArray(v) || v.length === 0) v = DEFAULT_VIDEOS;
-  if(!v.some(x => x.featured)) v[0].featured = true;
-  setObj(VIDEOS_KEY, v);
+  const res = await fetch("data.json", { cache: "no-store" });
+  DATA = await res.json();
 }
 
-function planToMonths(plan){
-  if (plan === "3m") return 3;
-  if (plan === "6m") return 6;
-  if (plan === "1y") return 12;
-  return 3;
+function saveLocal(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(DATA, null, 2));
 }
-function addMonths(date, months){
-  const d = new Date(date);
+
+function setCssVars(){
+  const a = DATA.app || {};
+  document.documentElement.style.setProperty("--primary", a.primaryColor || "#e50914");
+  document.documentElement.style.setProperty("--dark-bg", a.darkBg || "#141414");
+  document.documentElement.style.setProperty("--card-bg", a.cardBg || "#1f1f1f");
+
+  // login bg / hero bg
+  const login = $("loginScreen");
+  if(login) login.style.backgroundImage =
+    `linear-gradient(rgba(0,0,0,.7), rgba(0,0,0,.7)), url('${a.loginBackground || ""}')`;
+
+  const heroCard = document.querySelector(".hero-card");
+  if(heroCard) heroCard.style.backgroundImage = `url('${a.heroBackground || ""}')`;
+
+  // titles
+  const title = DATA.app?.title || "Consultoria Dos Sonhos";
+  document.title = title;
+  if($("brandLogo")) $("brandLogo").textContent = title;
+  if($("studentTitle")) $("studentTitle").textContent = title;
+}
+
+/* =========
+   Helpers
+   ========= */
+function addMonths(dateISO, months){
+  const d = new Date(dateISO + "T00:00:00");
   const day = d.getDate();
-  d.setMonth(d.getMonth() + months);
-  if (d.getDate() < day) d.setDate(0);
+  d.setMonth(d.getMonth() + Number(months));
+  // handle month rollover
+  if(d.getDate() !== day) d.setDate(0);
   return d;
 }
-function formatDateBR(dt){
-  const d = new Date(dt);
-  const dd = String(d.getDate()).padStart(2,"0");
-  const mm = String(d.getMonth()+1).padStart(2,"0");
-  const yyyy = d.getFullYear();
+
+function fmtDateBR(date){
+  const dd = String(date.getDate()).padStart(2,"0");
+  const mm = String(date.getMonth()+1).padStart(2,"0");
+  const yyyy = date.getFullYear();
   return `${dd}/${mm}/${yyyy}`;
 }
-function isExpired(expiresAt){
-  return Date.now() > new Date(expiresAt).getTime();
-}
-function extractYoutubeId(input){
-  const t = (input||"").trim();
-  if(!t) return "";
-  if(t.includes("youtu.be/")) return t.split("youtu.be/")[1].split(/[?&]/)[0];
-  if(t.includes("youtube.com")){
-    const m = t.match(/[?&]v=([^?&]+)/);
-    if(m && m[1]) return m[1];
-    const shorts = t.match(/shorts\/([^?&]+)/);
-    if(shorts && shorts[1]) return shorts[1];
-  }
-  return t;
-}
 
-// ======= Abas =======
-function setTab(which){
-  const isLogin = which === "login";
-  const isReg = which === "register";
-  const isAdm = which === "admin";
-
-  el("tabLogin").classList.toggle("active", isLogin);
-  el("tabRegister").classList.toggle("active", isReg);
-  el("tabAdmin").classList.toggle("active", isAdm);
-
-  el("loginForm").classList.toggle("hidden", !isLogin);
-  el("registerForm").classList.toggle("hidden", !isReg);
-  el("adminForm").classList.toggle("hidden", !isAdm);
-
-  el("loginMsg").textContent = "";
-  el("regMsg").textContent = "";
-  el("adminMsg").textContent = "";
-
-  if(isAdm) adminLock();
-}
-
-el("tabLogin").addEventListener("click", ()=> setTab("login"));
-el("tabRegister").addEventListener("click", ()=> setTab("register"));
-el("tabAdmin").addEventListener("click", ()=> setTab("admin"));
-
-// ======= Modal =======
-function openVideo(v, topicTitle){
-  const id = v.youtubeId;
-  if(!id){ alert("Vídeo sem youtubeId válido."); return; }
-
-  el("modalTitle").textContent = v.title;
-  el("modalSub").textContent = topicTitle;
-
-  el("player").innerHTML = `
-    <iframe
-      src="https://www.youtube.com/embed/${id}?autoplay=1&rel=0"
-      allow="autoplay; encrypted-media; picture-in-picture"
-      allowfullscreen
-      title="${(v.title||"Aula").replaceAll('"','')}"
-    ></iframe>
-  `;
-  el("modal").classList.add("open");
-}
-function closeVideo(){
-  el("modal").classList.remove("open");
-  el("player").innerHTML = "";
-}
-
-function makeCard(v, topicTitle){
-  const card = document.createElement("div");
-  card.className = "card";
-  card.innerHTML = `
-    <div class="thumb"><span class="badge">${v.label || "Aula"}</span></div>
-    <div class="meta">
-      <p class="title">${v.title}</p>
-      <p class="desc">${v.desc || ""}<br><span class="muted small">${topicTitle}</span></p>
-    </div>
-  `;
-  card.addEventListener("click", ()=> openVideo(v, topicTitle));
-  return card;
-}
-
-/* ✅ row com setas */
-function scrollRow(rowEl, dir){
-  const amount = Math.max(280, rowEl.clientWidth * 0.85);
-  rowEl.scrollBy({ left: dir * amount, behavior: "smooth" });
-}
-
-function buildRow(topic, list){
-  const section = document.createElement("section");
-  section.className = "section";
-  section.id = topic.key;
-
-  section.innerHTML = `
-    <div class="section-head">
-      <div>
-        <h3>${topic.title}</h3>
-        <p>${topic.hint || ""}</p>
-      </div>
-    </div>
-  `;
-
-  // ✅ Sempre mostra algo, mesmo vazio
-  if(!list.length){
-    const empty = document.createElement("div");
-    empty.className = "empty";
-    empty.textContent = "Ainda não há aulas neste tópico.";
-    section.appendChild(empty);
-    return section;
-  }
-
-  const wrap = document.createElement("div");
-  wrap.className = "row-wrap";
-
-  const left = document.createElement("button");
-  left.className = "nav left btn";
-  left.type = "button";
-  left.textContent = "◀";
-
-  const right = document.createElement("button");
-  right.className = "nav right btn";
-  right.type = "button";
-  right.textContent = "▶";
-
-  const row = document.createElement("div");
-  row.className = "row";
-
-  list.forEach(v => row.appendChild(makeCard(v, topic.title)));
-
-  left.addEventListener("click", ()=> scrollRow(row, -1));
-  right.addEventListener("click", ()=> scrollRow(row, +1));
-
-  wrap.appendChild(left);
-  wrap.appendChild(row);
-  wrap.appendChild(right);
-
-  section.appendChild(wrap);
-  return section;
-}
-
-/* ✅ CORREÇÃO PRINCIPAL: sempre renderiza TODOS os tópicos */
-function renderPlatform(){
-  const container = el("modules");
-  if(!container) return;
-
-  container.innerHTML = "";
-  const q = normalize(searchText);
-  const vids = getVideos();
-
-  TOPIC_META.forEach(topic => {
-    const listAll = vids.filter(v => v.topic === topic.key);
-    const list = listAll.filter(v => {
-      const hay = normalize([v.title, v.desc, v.label, topic.title].join(" "));
-      return q ? hay.includes(q) : true;
-    });
-
-    // ✅ não pula tópico na busca; só muda o texto
-    container.appendChild(buildRow(topic, list));
-  });
-}
-
-function updateAccessInfo(){
-  const session = getObj(SESSION_KEY);
-  if(!session){ el("accessInfo").textContent = "—"; return; }
-  const users = getUsers();
-  const u = users[session.username];
-  if(!u){ el("accessInfo").textContent = "—"; return; }
-
-  const status = isExpired(u.expiresAt) ? "VENCIDO" : "ATIVO";
-  el("accessInfo").textContent = `Aluno(a): ${u.name} • Acesso: ${status} • Expira em: ${formatDateBR(u.expiresAt)}`;
-}
-
-// ======= Login / Logout =======
-function goPlatform(session){
-  setObj(SESSION_KEY, session);
-  el("loginScreen").classList.add("hidden");
-  el("platformScreen").classList.remove("hidden");
-  updateAccessInfo();
-  renderPlatform();
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}
-function goLogin(){
-  localStorage.removeItem(SESSION_KEY);
-  el("platformScreen").classList.add("hidden");
-  el("loginScreen").classList.remove("hidden");
-  closeVideo();
-  setTab("login");
-}
-
-el("loginForm").addEventListener("submit", (e) => {
-  e.preventDefault();
-  const username = el("loginUser").value.trim().toLowerCase();
-  const password = el("loginPass").value;
-
-  const users = getUsers();
-  const u = users[username];
-
-  if(!u){ el("loginMsg").textContent = "Usuário não encontrado. Cadastre no modo Admin."; return; }
-  if(u.password !== password){ el("loginMsg").textContent = "Senha incorreta."; return; }
-  if(isExpired(u.expiresAt)){ el("loginMsg").textContent = `Acesso vencido em ${formatDateBR(u.expiresAt)}.`; return; }
-
-  goPlatform({ username });
-});
-
-el("logoutBtn").addEventListener("click", goLogin);
-
-el("searchInput").addEventListener("input", (e)=> {
-  searchText = e.target.value;
-  renderPlatform();
-});
-
-el("playFeatured").addEventListener("click", ()=> {
-  const vids = getVideos();
-  const featured = vids.find(v => v.featured) || vids[0];
-  const topicTitle = TOPIC_META.find(t=>t.key===featured.topic)?.title || "Aula";
-  openVideo(featured, topicTitle);
-});
-
-el("scrollTopics").addEventListener("click", ()=> {
-  el("topicsAnchor").scrollIntoView({ behavior:"smooth" });
-});
-
-/* ✅ scroll com offset (topbar + rodapé fixo) */
-function scrollToSectionWithOffset(target){
-  if(!target) return;
-  const topbarH = document.querySelector(".topbar")?.getBoundingClientRect().height || 0;
-  const y = target.getBoundingClientRect().top + window.scrollY - topbarH - 12;
-  window.scrollTo({ top: y, behavior: "smooth" });
-}
-
-/* ✅ CORREÇÃO: se a seção não existir por algum motivo, força render e tenta de novo */
-document.querySelectorAll(".fbtn").forEach(btn => {
-  btn.addEventListener("click", ()=> {
-    const id = btn.dataset.go;
-    let target = document.getElementById(id);
-    if(!target){
-      renderPlatform();
-      target = document.getElementById(id);
+function youtubeEmbed(url){
+  try{
+    const u = new URL(url);
+    if(u.hostname.includes("youtu.be")){
+      const id = u.pathname.replace("/","");
+      return `https://www.youtube.com/embed/${id}`;
     }
-    scrollToSectionWithOffset(target);
-  });
-});
-
-// Modal
-el("closeModal").addEventListener("click", closeVideo);
-el("modal").addEventListener("click", (e)=>{ if(e.target.id==="modal") closeVideo(); });
-document.addEventListener("keydown", (e)=>{ if(e.key==="Escape") closeVideo(); });
-
-// ======= Cadastro de alunos =======
-el("registerForm").addEventListener("submit", (e) => {
-  e.preventDefault();
-  const name = el("regName").value.trim();
-  const username = el("regUser").value.trim().toLowerCase();
-  const password = el("regPass").value;
-  const plan = el("regPlan").value;
-
-  const users = getUsers();
-  if(users[username]){
-    el("regMsg").textContent = "Já existe esse usuário. Escolha outro login.";
-    return;
-  }
-
-  const months = planToMonths(plan);
-  const now = new Date();
-  const expires = addMonths(now, months);
-  const planLabel = plan === "3m" ? "3 meses" : plan === "6m" ? "6 meses" : "1 ano";
-
-  users[username] = {
-    name, username, password,
-    plan, planLabel,
-    createdAt: now.toISOString(),
-    expiresAt: expires.toISOString()
-  };
-  setUsers(users);
-
-  el("regMsg").textContent = `Cadastrado! Usuário: ${username} • Expira em ${formatDateBR(expires)}.`;
-  el("regName").value = ""; el("regUser").value = ""; el("regPass").value = ""; el("regPlan").value = "3m";
-});
-
-el("listUsersBtn").addEventListener("click", ()=> {
-  const users = getUsers();
-  const keys = Object.keys(users);
-  if(!keys.length) { alert("Nenhum aluno cadastrado."); return; }
-  const lines = keys.map(k => {
-    const u = users[k];
-    return `${u.name} | ${u.username} | expira: ${formatDateBR(u.expiresAt)} (${u.planLabel})`;
-  });
-  alert(lines.join("\n"));
-});
-
-el("wipeUsersBtn").addEventListener("click", ()=> {
-  if(!confirm("Apagar TODOS os alunos cadastrados?")) return;
-  setUsers({});
-  alert("Alunos apagados.");
-});
-
-// ======= ADMIN =======
-let adminUnlocked = false;
-
-function adminLock(){
-  adminUnlocked = false;
-  el("adminPanel").classList.add("hidden");
-  el("adminMsg").textContent = "";
-  el("adminPass").value = "";
-  clearVideoForm();
-}
-function adminUnlock(){
-  adminUnlocked = true;
-  el("adminPanel").classList.remove("hidden");
-  el("adminMsg").textContent = "Painel liberado. Você pode adicionar/editar/apagar vídeos.";
-  renderAdminList();
+    const v = u.searchParams.get("v");
+    if(v) return `https://www.youtube.com/embed/${v}`;
+    const parts = u.pathname.split("/").filter(Boolean);
+    const idx = parts.indexOf("embed");
+    if(idx >= 0 && parts[idx+1]) return `https://www.youtube.com/embed/${parts[idx+1]}`;
+  }catch(_){}
+  return "";
 }
 
-el("adminEnter").addEventListener("click", ()=> {
-  const pass = el("adminPass").value;
-  if(pass !== ADMIN_PASSWORD){
-    el("adminMsg").textContent = "Senha do ADM incorreta.";
-    adminLock();
-    return;
-  }
-  adminUnlock();
-});
-el("adminExit").addEventListener("click", adminLock);
+/* =========
+   UI: Plans
+   ========= */
+function renderPlans(){
+  const root = $("plansList");
+  if(!root) return;
+  root.innerHTML = "";
 
-function renderAdminList(){
-  const list = el("adminList");
-  list.innerHTML = "";
-  const vids = getVideos();
+  (DATA.plans || []).forEach(plan => {
+    const div = document.createElement("div");
+    div.className = "plan-card";
+    div.innerHTML = `
+      <h3 class="plan-title">${plan.title}</h3>
+      <p>${plan.subtitle}</p>
+      <div class="plan-price">${plan.price}</div>
+      <p class="muted">${plan.paymentNote || ""}</p>
+      <ul class="plan-features">
+        ${(plan.features || []).map(f => `<li>✓ ${f}</li>`).join("")}
+      </ul>
+      <button class="btn-plan" type="button">Comprar Plano</button>
+    `;
+    root.appendChild(div);
+  });
+}
 
-  const sorted = [...vids].sort((a,b)=>{
-    if(a.topic !== b.topic) return a.topic.localeCompare(b.topic);
-    return (a.title||"").localeCompare(b.title||"");
+/* =========
+   UI: Student categories/videos
+   ========= */
+function renderStudentCategories(){
+  const root = $("categoriesRoot");
+  if(!root) return;
+  root.innerHTML = "";
+
+  const cats = DATA.categories || [];
+  const vids = (DATA.videos || []).filter(v => v.published !== false);
+
+  cats.forEach(cat => {
+    const section = document.createElement("section");
+    section.className = "section";
+    section.innerHTML = `
+      <h2 class="section-title">${cat.name}</h2>
+      <div class="carousel-container" data-cat="${cat.id}"></div>
+    `;
+    root.appendChild(section);
+
+    const car = section.querySelector(".carousel-container");
+    vids.filter(v => v.categoryId === cat.id).forEach(v => {
+      const item = document.createElement("div");
+      item.className = "carousel-item";
+      item.innerHTML = `
+        <div class="video-card" data-video="${v.id}">
+          <img src="${v.thumb || "https://placehold.co/300x170"}" alt="Vídeo">
+          <div class="video-meta">
+            <h3>${v.title}</h3>
+            <p>${v.duration || ""}</p>
+            ${typeof v.progress === "number" ? `
+              <div class="progress-bar"><div class="progress" style="width:${v.progress}%"></div></div>
+            ` : ``}
+          </div>
+          <div class="watch-btn">Assistir</div>
+        </div>
+      `;
+      car.appendChild(item);
+    });
   });
 
-  sorted.forEach(v => {
-    const topicTitle = TOPIC_META.find(t=>t.key===v.topic)?.title || v.topic;
+  // bind watch buttons
+  document.querySelectorAll(".video-card .watch-btn").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const card = btn.closest(".video-card");
+      const id = card.getAttribute("data-video");
+      openPlayerById(id);
+    });
+  });
+}
 
-    const item = document.createElement("div");
-    item.className = "admin-item";
-    item.innerHTML = `
-      <div class="top">
-        <div>
-          <div class="name">${v.title}</div>
-          <div class="meta">${topicTitle} • ${v.label || "Aula"} • youtubeId: ${v.youtubeId || "-"}</div>
-        </div>
-        <div class="admin-actions">
-          <button class="btn" type="button" data-edit="${v.id}">Editar</button>
-          <button class="btn danger" type="button" data-del="${v.id}">Apagar</button>
-          <button class="btn" type="button" data-feat="${v.id}">Destaque</button>
-        </div>
+/* =========
+   Player
+   ========= */
+let currentVideoIndex = -1;
+let currentPlaylist = [];
+
+function openPlayerById(videoId){
+  const vids = (DATA.videos || []).filter(v => v.published !== false);
+  currentPlaylist = vids;
+  currentVideoIndex = vids.findIndex(v => v.id === videoId);
+  if(currentVideoIndex < 0) return;
+  openPlayer(vids[currentVideoIndex]);
+}
+
+function openPlayer(video){
+  const overlay = $("playerOverlay");
+  const frame = $("videoFrame");
+  const title = $("playerTitle");
+
+  const embed = youtubeEmbed(video.youtubeUrl || "");
+  title.textContent = video.title || "Vídeo";
+  frame.src = embed || "";
+
+  overlay.style.display = "flex";
+  overlay.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+}
+
+function closePlayer(){
+  const overlay = $("playerOverlay");
+  const frame = $("videoFrame");
+
+  overlay.style.display = "none";
+  overlay.setAttribute("aria-hidden", "true");
+  document.body.style.overflow = "auto";
+  frame.src = "";
+}
+
+function nextVideo(){
+  if(!currentPlaylist.length) return;
+  const next = currentVideoIndex + 1;
+  if(next >= currentPlaylist.length) return;
+  currentVideoIndex = next;
+  openPlayer(currentPlaylist[currentVideoIndex]);
+}
+
+/* =========
+   Admin: tabs + tables + modals
+   ========= */
+function showAdminTab(tabId){
+  document.querySelectorAll(".admin-tab").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".admin-tab-content").forEach(c => c.classList.remove("active"));
+
+  document.querySelectorAll(`.admin-tab[data-tab="${tabId}"]`).forEach(t => t.classList.add("active"));
+  const content = $(tabId);
+  if(content) content.classList.add("active");
+}
+
+function renderStats(){
+  const root = $("statsCards");
+  if(!root) return;
+
+  const s = DATA.dashboardStats || {};
+  root.innerHTML = `
+    <div class="admin-card">
+      <h3 class="admin-h3">Total de Alunos</h3>
+      <p style="font-size:32px;color:var(--primary);font-weight:900;margin:0">${s.totalStudents ?? 0}</p>
+    </div>
+    <div class="admin-card">
+      <h3 class="admin-h3">Vídeos Disponíveis</h3>
+      <p style="font-size:32px;color:var(--primary);font-weight:900;margin:0">${s.totalVideos ?? 0}</p>
+    </div>
+    <div class="admin-card">
+      <h3 class="admin-h3">Aulas Concluídas</h3>
+      <p style="font-size:32px;color:var(--primary);font-weight:900;margin:0">${s.lessonsCompleted ?? 0}</p>
+    </div>
+  `;
+}
+
+function renderStudentsTables(){
+  const tbody = $("studentsTbody");
+  const recent = $("recentStudentsTbody");
+  const students = DATA.auth?.students || [];
+
+  const rows = students.map(st => {
+    const end = fmtDateBR(addMonths(st.startDate, st.planMonths));
+    const planLabel = `${st.planMonths} meses`;
+    const status = st.status === "active" ? `<span style="color:#22c55e">Ativo</span>` : `<span style="color:#f59e0b">Pendente</span>`;
+    return `
+      <tr>
+        <td>${st.name || ""}</td>
+        <td>${st.email || ""}</td>
+        <td>${planLabel}</td>
+        <td>${end}</td>
+        <td>${status}</td>
+        <td>
+          <button class="admin-btn admin-btn-danger" data-del-student="${st.id}">Excluir</button>
+        </td>
+      </tr>
+    `;
+  }).join("");
+
+  if(tbody) tbody.innerHTML = rows || `<tr><td colspan="6" class="muted">Sem alunos.</td></tr>`;
+  if(recent) recent.innerHTML = rows.split("</tr>").slice(0,2).join("</tr>") || `<tr><td colspan="5" class="muted">Sem alunos.</td></tr>`;
+
+  document.querySelectorAll("[data-del-student]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.getAttribute("data-del-student");
+      DATA.auth.students = DATA.auth.students.filter(s => s.id !== id);
+      saveLocal();
+      renderStudentsTables();
+    });
+  });
+}
+
+function renderVideosTable(){
+  const tbody = $("videosTbody");
+  const vids = DATA.videos || [];
+  const catMap = new Map((DATA.categories || []).map(c => [c.id, c.name]));
+
+  tbody.innerHTML = vids.map(v => {
+    const status = v.published !== false ? `<span style="color:#22c55e">Publicado</span>` : `<span style="color:#f59e0b">Rascunho</span>`;
+    return `
+      <tr>
+        <td>${v.title || ""}</td>
+        <td>${catMap.get(v.categoryId) || v.categoryId || ""}</td>
+        <td>${v.duration || ""}</td>
+        <td>${status}</td>
+        <td>
+          <button class="admin-btn admin-btn-danger" data-del-video="${v.id}">Excluir</button>
+        </td>
+      </tr>
+    `;
+  }).join("") || `<tr><td colspan="5" class="muted">Sem vídeos.</td></tr>`;
+
+  document.querySelectorAll("[data-del-video]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.getAttribute("data-del-video");
+      DATA.videos = DATA.videos.filter(v => v.id !== id);
+      saveLocal();
+      renderVideosTable();
+      renderStudentCategories();
+    });
+  });
+}
+
+function renderExercises(){
+  const root = $("exercisesRoot");
+  if(!root) return;
+  root.innerHTML = "";
+
+  (DATA.exercises || []).forEach(group => {
+    const block = document.createElement("div");
+    block.className = "exercise-category";
+    block.innerHTML = `
+      <h4 style="margin:0;font-weight:900">${group.name}</h4>
+      <div class="exercise-list">
+        ${(group.items || []).map(i => `<div class="exercise-item">${i}</div>`).join("")}
       </div>
     `;
-
-    item.querySelector("[data-edit]").addEventListener("click", ()=> loadVideoToForm(v.id));
-    item.querySelector("[data-del]").addEventListener("click", ()=> {
-      if(!confirm("Apagar este vídeo?")) return;
-      const kept = getVideos().filter(x => x.id !== v.id);
-      setVideos(kept);
-      renderAdminList();
-      renderPlatform();
+    block.addEventListener("click", () => {
+      const list = block.querySelector(".exercise-list");
+      list.style.display = list.style.display === "block" ? "none" : "block";
     });
-    item.querySelector("[data-feat]").addEventListener("click", ()=> {
-      const all = getVideos().map(x => ({ ...x, featured: x.id === v.id }));
-      setVideos(all);
-      el("adminMsg").textContent = `Destaque definido: ${v.title}`;
-      renderAdminList();
-      renderPlatform();
-    });
-
-    list.appendChild(item);
+    root.appendChild(block);
   });
 }
 
-function loadVideoToForm(id){
-  const v = getVideos().find(x => x.id === id);
-  if(!v) return;
+function renderThemes(){
+  const row = $("themesRow");
+  if(!row) return;
+  row.innerHTML = "";
 
-  el("videoId").value = v.id;
-  el("videoTopic").value = v.topic;
-  el("videoLabel").value = v.label || "";
-  el("videoTitle").value = v.title || "";
-  el("videoDesc").value = v.desc || "";
-  el("videoYT").value = v.youtubeId || "";
+  const themes = DATA.themes || [];
+  const selectedId = DATA.app?.selectedThemeId || themes[0]?.id;
 
-  el("adminMsg").textContent = "Editando: " + v.title;
+  themes.forEach(t => {
+    const div = document.createElement("div");
+    div.className = "theme-preview" + (t.id === selectedId ? " selected" : "");
+    div.style.background = `linear-gradient(to right, ${t.gradient[0]}, ${t.gradient[1]})`;
+    div.title = t.name;
+    div.addEventListener("click", () => {
+      DATA.app.selectedThemeId = t.id;
+      // apply primary color as first gradient color (opcional)
+      DATA.app.primaryColor = t.gradient[0];
+      saveLocal();
+      setCssVars();
+      renderThemes();
+    });
+    row.appendChild(div);
+  });
 }
 
-function clearVideoForm(){
-  el("videoId").value = "";
-  el("videoTopic").value = "start";
-  el("videoLabel").value = "";
-  el("videoTitle").value = "";
-  el("videoDesc").value = "";
-  el("videoYT").value = "";
+/* =========
+   Modals
+   ========= */
+function openModal(id){
+  const m = $(id);
+  if(!m) return;
+  m.classList.remove("hidden");
+  m.setAttribute("aria-hidden", "false");
+}
+function closeModal(id){
+  const m = $(id);
+  if(!m) return;
+  m.classList.add("hidden");
+  m.setAttribute("aria-hidden", "true");
 }
 
-el("saveVideoBtn").addEventListener("click", ()=> {
-  if(!adminUnlocked){
-    el("adminMsg").textContent = "Entre no painel ADM primeiro.";
-    return;
-  }
-
-  const id = el("videoId").value || uid();
-  const topic = el("videoTopic").value;
-  const label = el("videoLabel").value.trim();
-  const title = el("videoTitle").value.trim();
-  const desc = el("videoDesc").value.trim();
-  const youtubeId = extractYoutubeId(el("videoYT").value);
-
-  if(!title || !youtubeId){
-    el("adminMsg").textContent = "Preencha pelo menos Título e YouTube ID.";
-    return;
-  }
-
-  const vids = getVideos();
-  const idx = vids.findIndex(v => v.id === id);
-  const payload = { id, topic, label, title, desc, youtubeId };
-
-  if(idx >= 0) vids[idx] = { ...vids[idx], ...payload };
-  else vids.push(payload);
-
-  setVideos(vids);
-  renderAdminList();
-  renderPlatform();
-  clearVideoForm();
-  el("adminMsg").textContent = "Salvo com sucesso!";
-});
-
-el("clearVideoBtn").addEventListener("click", ()=> {
-  clearVideoForm();
-  el("adminMsg").textContent = "Formulário limpo.";
-});
-
-el("exportVideosBtn").addEventListener("click", ()=> {
-  if(!adminUnlocked){ el("adminMsg").textContent = "Entre no painel ADM primeiro."; return; }
-  el("videosJson").value = JSON.stringify(getVideos(), null, 2);
-  el("adminMsg").textContent = "Exportado! Copie o JSON para backup.";
-});
-
-el("importVideosBtn").addEventListener("click", ()=> {
-  if(!adminUnlocked){ el("adminMsg").textContent = "Entre no painel ADM primeiro."; return; }
-  try{
-    const txt = el("videosJson").value.trim();
-    if(!txt) { el("adminMsg").textContent = "Cole o JSON no campo abaixo."; return; }
-    const parsed = JSON.parse(txt);
-    if(!Array.isArray(parsed)) throw new Error("JSON precisa ser uma lista (array).");
-    setVideos(parsed);
-    el("adminMsg").textContent = "Importado com sucesso!";
-    renderAdminList();
-    renderPlatform();
-  }catch(err){
-    el("adminMsg").textContent = "Erro ao importar: " + err.message;
-  }
-});
-
-// ======= Init =======
-el("year").textContent = new Date().getFullYear();
-setTab("login");
-adminLock();
-
-const session = getObj(SESSION_KEY);
-if(session?.username){
-  const u = getUsers()[session.username];
-  if(u && !isExpired(u.expiresAt)){
-    goPlatform({ username: session.username });
-  }
+/* =========
+   Forms
+   ========= */
+function fillPlanSelects(){
+  const sel = $("studentPlan");
+  if(!sel) return;
+  sel.innerHTML = `<option value="">Selecione um plano</option>` +
+    (DATA.plans || []).map(p => `<option value="${p.months}">${p.months} meses</option>`).join("");
 }
+
+function fillVideoCategorySelect(){
+  const sel = $("videoCategory");
+  if(!sel) return;
+  sel.innerHTML = `<option value="">Selecione uma categoria</option>` +
+    (DATA.categories || []).map(c => `<option value="${c.id}">${c.name}</option>`).join("");
+}
+
+function uid(prefix){
+  return (prefix || "id") + "_" + Math.random().toString(16).slice(2) + Date.now().toString(16);
+}
+
+/* =========
+   Auth / Navigation
+   ========= */
+function showLogin(){
+  $("loginScreen").style.display = "flex";
+  $("studentDashboard").classList.add("hidden");
+  $("adminDashboard").classList.add("hidden");
+}
+
+function showStudent(){
+  $("loginScreen").style.display = "none";
+  $("studentDashboard").classList.remove("hidden");
+  $("adminDashboard").classList.add("hidden");
+}
+
+function showAdmin(){
+  $("loginScreen").style.display = "none";
+  $("studentDashboard").classList.add("hidden");
+  $("adminDashboard").classList.remove("hidden");
+}
+
+/* =========
+   Main bindings
+   ========= */
+function bindEvents(){
+  // login
+  $("loginForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const u = $("username").value.trim();
+    const p = $("password").value;
+
+    const err = $("loginErrorMessage");
+    err.style.display = "none";
+
+    const admin = DATA.auth?.admin;
+    if(admin && u === admin.username && p === admin.password){
+      showAdmin();
+      renderAdminAll();
+      return;
+    }
+
+    const students = DATA.auth?.students || [];
+    const student = students.find(s => s.username === u && s.password === p);
+    if(student){
+      showStudent();
+      renderStudentCategories();
+      return;
+    }
+
+    err.style.display = "block";
+    setTimeout(()=> err.style.display = "none", 3000);
+  });
+
+  // logout
+  $("logoutBtn").addEventListener("click", () => {
+    $("username").value = "";
+    $("password").value = "";
+    showLogin();
+  });
+
+  $("adminLogout").addEventListener("click", (e) => {
+    e.preventDefault();
+    $("username").value = "";
+    $("password").value = "";
+    showLogin();
+  });
+
+  // player
+  $("playHero").addEventListener("click", () => {
+    // abre o primeiro vídeo publicado
+    const first = (DATA.videos || []).find(v => v.published !== false);
+    if(first) openPlayerById(first.id);
+  });
+
+  $("closePlayer").addEventListener("click", closePlayer);
+  $("playerOverlay").addEventListener("click", (e) => {
+    if(e.target === $("playerOverlay")) closePlayer();
+  });
+
+  $("nextVideoBtn").addEventListener("click", nextVideo);
+
+  // admin tabs
+  document.querySelectorAll(".admin-tab").forEach(btn => {
+    btn.addEventListener("click", () => showAdminTab(btn.getAttribute("data-tab")));
+  });
+
+  // sidebar links (tab)
+  document.querySelectorAll(".side-link[data-tab]").forEach(a => {
+    a.addEventListener("click", (e) => {
+      e.preventDefault();
+      showAdminTab(a.getAttribute("data-tab"));
+    });
+  });
+
+  // open modals
+  $("addStudentBtn").addEventListener("click", () => openModal("studentModal"));
+  $("addVideoBtn").addEventListener("click", () => openModal("videoModal"));
+
+  // close modal buttons
+  document.querySelectorAll("[data-close]").forEach(btn => {
+    btn.addEventListener("click", () => closeModal(btn.getAttribute("data-close")));
+  });
+
+  // close on backdrop click
+  ["studentModal","videoModal"].forEach(id => {
+    const modal = $(id);
+    modal.addEventListener("click", (e) => {
+      if(e.target === modal) closeModal(id);
+    });
+  });
+
+  // add student
+  $("studentForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const st = {
+      id: uid("s"),
+      name: $("studentName").value.trim(),
+      email: $("studentEmail").value.trim(),
+      username: $("studentUsername").value.trim(),
+      password: $("studentPassword").value,
+      planMonths: Number($("studentPlan").value),
+      startDate: $("studentAccess").value,
+      status: "active"
+    };
+
+    DATA.auth.students.push(st);
+    saveLocal();
+    renderStudentsTables();
+    closeModal("studentModal");
+    e.target.reset();
+    alert("Aluno adicionado com sucesso!");
+  });
+
+  // add video
+  $("videoForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const v = {
+      id: uid("v"),
+      title: $("videoTitle").value.trim(),
+      categoryId: $("videoCategory").value,
+      duration: $("videoDuration").value.trim(),
+      thumb: "https://placehold.co/300x170",
+      progress: null,
+      youtubeUrl: $("videoUrl").value.trim(),
+      published: $("videoStatus").checked,
+      description: $("videoDescription").value.trim()
+    };
+
+    DATA.videos.push(v);
+    saveLocal();
+    renderVideosTable();
+    renderStudentCategories();
+    closeModal("videoModal");
+    e.target.reset();
+    alert("Vídeo adicionado com sucesso!");
+  });
+
+  // themes save (preview only)
+  $("saveThemeBtn").addEventListener("click", () => {
+    saveLocal();
+    alert("Tema salvo (no navegador).");
+  });
+
+  // image preview (optional): just stores as dataURL locally
+  $("backgroundImage").addEventListener("change", async (e) => {
+    const file = e.target.files?.[0];
+    if(!file) return;
+    const url = await fileToDataURL(file);
+    DATA.app.loginBackground = url;
+    DATA.app.heroBackground = url;
+    saveLocal();
+    setCssVars();
+  });
+
+  $("customLogo").addEventListener("change", async (e) => {
+    const file = e.target.files?.[0];
+    if(!file) return;
+    const url = await fileToDataURL(file);
+    // store and show on login title as simple text replacement not possible.
+    // for now we keep it as data (ready for a future img logo)
+    DATA.app.customLogoDataUrl = url;
+    saveLocal();
+    alert("Logo salvo (no navegador).");
+  });
+}
+
+function fileToDataURL(file){
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result));
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+}
+
+function renderAdminAll(){
+  renderStats();
+  renderStudentsTables();
+  renderVideosTable();
+  renderThemes();
+  renderExercises();
+  fillPlanSelects();
+  fillVideoCategorySelect();
+}
+
+/* =========
+   Init
+   ========= */
+(async function init(){
+  await loadData();
+  setCssVars();
+  renderPlans();
+  fillPlanSelects();
+  fillVideoCategorySelect();
+  bindEvents();
+
+  // se quiser exibir planos na tela de login:
+  $("plansSection").style.display = "block";
+})();
